@@ -1,11 +1,11 @@
 'use client';
 import { useState } from 'react';
-import { Contract, TabId, ValidationResult, CreditStatus } from '../../data/validationData';
+import { Contract, ValidationResult, CreditStatus } from '../../data/validationData';
 import { DataTab } from './tabs/DataTab';
 import { PricingTab } from './tabs/PricingTab';
-import { CurveTab } from './tabs/CurveTab';
+import { QuoteTab } from './tabs/QuoteTab';
 import { SignatureTab } from './tabs/SignatureTab';
-import { IndicatorsTab } from './tabs/IndicatorsTab';
+import { AQApprovalTab } from './tabs/AQApprovalTab';
 import { AuditTrailTab } from './AuditTrailTab';
 
 interface Props {
@@ -15,16 +15,15 @@ interface Props {
   onUpdateStatus: (status: Contract['status']) => void;
 }
 
-type AllTabs = TabId | 'audit';
+type AllTabs = 'overview' | 'data' | 'pricing' | 'quote' | 'signature' | 'aq-approval' | 'audit';
 
 const TABS: { id: AllTabs; label: string }[] = [
   { id: 'overview',    label: 'Overview' },
   { id: 'data',        label: 'Data' },
   { id: 'pricing',     label: 'Pricing' },
-  { id: 'curve',       label: 'Curve' },
-  { id: 'indicators',  label: 'Indicators' },
+  { id: 'quote',       label: 'Quote' },
   { id: 'signature',   label: 'Signature' },
-  { id: 'audit',       label: 'Audit Trail' },
+  { id: 'aq-approval', label: 'AQ Approval' },
 ];
 
 function ResultIcon({ status, size = 'sm' }: { status: ValidationResult; size?: 'sm' | 'lg' }) {
@@ -35,52 +34,59 @@ function ResultIcon({ status, size = 'sm' }: { status: ValidationResult; size?: 
   return <svg className={`${sz} text-slate-400`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="9" /></svg>;
 }
 
-const checkLabels: Record<string, string> = {
-  dataIntegrity: 'Data Integrity', pricingAccuracy: 'Pricing Accuracy',
-  curveAlignment: 'Curve Alignment', ampIndicators: 'AMP Indicators',
-  roiCredit: 'ROI / Credit', signatureReadiness: 'Signature Readiness',
-};
-const checkTabMap: Record<string, AllTabs> = {
-  dataIntegrity: 'data', pricingAccuracy: 'pricing', curveAlignment: 'curve',
-  ampIndicators: 'indicators', signatureReadiness: 'signature',
-};
-
 export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUpdateStatus }: Props) {
-  const [activeTab, setActiveTab] = useState<AllTabs>('overview');
-  const [tabVerified, setTabVerified] = useState<Record<string, boolean>>({
-    data: contract.validationChecks.dataIntegrity.status === 'Pass',
-    pricing: contract.validationChecks.pricingAccuracy.status === 'Pass',
-    curve: contract.validationChecks.curveAlignment.status === 'Pass',
-    indicators: contract.validationChecks.ampIndicators.status === 'Pass',
-    roi: contract.validationChecks.roiCredit.status !== 'Fail',
-    signature: contract.validationChecks.signatureReadiness.status === 'Pass',
-  });
-  const [creditStatus, setCreditStatus] = useState<CreditStatus>(contract.creditApprovalStatus);
-  const [tradingReferralLogged, setTradingReferralLogged] = useState(false);
+  const checks = contract.validationChecks;
 
-  const allVerified = Object.values(tabVerified).every(Boolean) &&
-    (contract.roi >= 5 || creditStatus === 'Approved');
+  const [activeTab, setActiveTab] = useState<AllTabs>('overview');
+
+  // Derive initial quote status — pass only if both curve and indicators pass
+  const quoteInitiallyVerified =
+    checks.curveAlignment.status === 'Pass' && checks.ampIndicators.status === 'Pass';
+
+  const [tabVerified, setTabVerified] = useState<Record<string, boolean>>({
+    data:        checks.dataIntegrity.status === 'Pass',
+    pricing:     checks.pricingAccuracy.status === 'Pass',
+    quote:       quoteInitiallyVerified,
+    signature:   checks.signatureReadiness.status === 'Pass',
+    aqApproval:  false, // always starts as pending — Trading team must confirm
+  });
+
+  const [creditStatus, setCreditStatus] = useState<CreditStatus>(contract.creditApprovalStatus);
+
+  // AQ Approval is the final gate — all checks must be done AND aq approved
+  const allVerified = Object.values(tabVerified).every(Boolean);
 
   const markVerified = (tab: string) => setTabVerified(p => ({ ...p, [tab]: true }));
 
-  const handleSimulateApproval = () => {
-    setCreditStatus('Approved');
-    setTabVerified(p => ({ ...p, roi: true }));
-  };
+  const handleSimulateApproval = () => setCreditStatus('Approved');
 
-  const handleReferToTrading = () => setTradingReferralLogged(true);
+  // Derived quote validation status (worst of curve + indicators)
+  const quoteStatus: ValidationResult = tabVerified.quote ? 'Pass' :
+    [checks.curveAlignment.status, checks.ampIndicators.status].includes('Fail') ? 'Fail' :
+    [checks.curveAlignment.status, checks.ampIndicators.status].includes('Warning') ? 'Warning' :
+    'Pass';
 
-  const checks = contract.validationChecks;
-  const failCount = Object.values(checks).filter(c => c.status === 'Fail').length;
-  const warnCount = Object.values(checks).filter(c => c.status === 'Warning').length;
+  const quoteMessage: string = (() => {
+    if (checks.curveAlignment.status !== 'Pass') return checks.curveAlignment.message;
+    if (checks.ampIndicators.status !== 'Pass') return checks.ampIndicators.message;
+    return 'Curve and indicators verified';
+  })();
 
-  // Tab badge dots
+  // Status counts excluding roiCredit (shown as inline indicators, not a tab)
+  const relevantChecks = [
+    checks.dataIntegrity, checks.pricingAccuracy,
+    checks.curveAlignment, checks.ampIndicators, checks.signatureReadiness,
+  ];
+  const failCount = relevantChecks.filter(c => c.status === 'Fail').length;
+  const warnCount = relevantChecks.filter(c => c.status === 'Warning').length;
+
+  // Badge dot for tab bar
   const tabBadge = (tab: AllTabs): ValidationResult | null => {
-    if (tab === 'data')       return contract.validationChecks.dataIntegrity.status;
-    if (tab === 'pricing')    return contract.validationChecks.pricingAccuracy.status;
-    if (tab === 'curve')      return contract.validationChecks.curveAlignment.status;
-    if (tab === 'indicators') return contract.validationChecks.ampIndicators.status;
-    if (tab === 'signature')  return contract.validationChecks.signatureReadiness.status;
+    if (tab === 'data')        return checks.dataIntegrity.status;
+    if (tab === 'pricing')     return checks.pricingAccuracy.status;
+    if (tab === 'quote')       return quoteStatus;
+    if (tab === 'signature')   return checks.signatureReadiness.status;
+    if (tab === 'aq-approval') return tabVerified.aqApproval ? 'Pass' : null;
     return null;
   };
 
@@ -88,6 +94,47 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
     if (!result || result === 'Pass') return null;
     return <span className={`ml-1.5 inline-block w-1.5 h-1.5 rounded-full ${result === 'Fail' ? 'bg-red-500' : 'bg-amber-400'}`} />;
   };
+
+  // Overview checklist — 5 items mapping to the 5 content tabs
+  const checklistItems: { key: string; label: string; message: string; status: ValidationResult; tab: AllTabs }[] = [
+    {
+      key: 'data',
+      label: 'Data Integrity',
+      message: checks.dataIntegrity.message,
+      status: tabVerified.data ? 'Pass' : checks.dataIntegrity.status,
+      tab: 'data',
+    },
+    {
+      key: 'pricing',
+      label: 'Pricing Accuracy',
+      message: checks.pricingAccuracy.message,
+      status: tabVerified.pricing ? 'Pass' : checks.pricingAccuracy.status,
+      tab: 'pricing',
+    },
+    {
+      key: 'quote',
+      label: 'Quote — Curve & Indicators',
+      message: quoteMessage,
+      status: quoteStatus,
+      tab: 'quote',
+    },
+    {
+      key: 'signature',
+      label: 'Signature Readiness',
+      message: checks.signatureReadiness.message,
+      status: tabVerified.signature ? 'Pass' : checks.signatureReadiness.status,
+      tab: 'signature',
+    },
+    {
+      key: 'aqApproval',
+      label: 'AQ Approval',
+      message: tabVerified.aqApproval
+        ? 'Confirmed by Trading team'
+        : 'Awaiting Trading team confirmation — final gate',
+      status: tabVerified.aqApproval ? 'Pass' : 'Pending',
+      tab: 'aq-approval',
+    },
+  ];
 
   return (
     <div className="p-6 max-w-screen-xl mx-auto">
@@ -125,8 +172,8 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             </button>
             <button onClick={onProceedToAcceptance} disabled={!allVerified}
               className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
-              title={!allVerified ? 'All validation checks must be complete before acceptance' : ''}>
-              Proceed to Acceptance →
+              title={!allVerified ? (!tabVerified.aqApproval ? 'AQ Approval must be confirmed by the Trading team before proceeding' : 'All validation checks must be complete') : ''}>
+              Proceed to Data Sheet →
             </button>
           </div>
         </div>
@@ -154,8 +201,8 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
           </div>
           <div>
-            <div className="text-green-900 font-semibold text-sm">Auto-Approved — all checks passed, proceeding to signature approval</div>
-            <div className="text-green-700 text-xs mt-0.5">All 6 validation categories passed. Contract is ready for acceptance.</div>
+            <div className="text-green-900 font-semibold text-sm">Auto-Approved — all checks passed</div>
+            <div className="text-green-700 text-xs mt-0.5">Confirm AQ Approval on the Trading team tab to proceed to the data sheet.</div>
           </div>
         </div>
       ) : contract.status === 'Manual Review' ? (
@@ -167,7 +214,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             <div className="text-amber-900 font-semibold text-sm">
               Manual Review Required — {failCount} failure{failCount !== 1 ? 's' : ''}{warnCount > 0 ? `, ${warnCount} warning${warnCount !== 1 ? 's' : ''}` : ''}
             </div>
-            <div className="text-amber-700 text-xs mt-0.5">Review the flagged tabs below and resolve all issues before proceeding to acceptance.</div>
+            <div className="text-amber-700 text-xs mt-0.5">Review flagged tabs and resolve all issues. AQ Approval must be confirmed last before the contract can proceed.</div>
           </div>
         </div>
       ) : null}
@@ -176,12 +223,18 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
       <div className="flex border-b border-slate-200 mb-5 overflow-x-auto">
         {TABS.map(tab => {
           const badge = tabBadge(tab.id);
+          const isAQApproval = tab.id === 'aq-approval';
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex items-center px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors -mb-px ${
                 activeTab === tab.id ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-              }`}>
+              } ${isAQApproval && !tabVerified.aqApproval ? 'font-semibold' : ''}`}>
               {tab.label}
+              {isAQApproval && !tabVerified.aqApproval && (
+                <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">
+                  Final gate
+                </span>
+              )}
               {badgeDot(badge)}
             </button>
           );
@@ -191,24 +244,31 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
       {/* Tab content */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-2 gap-5">
+          {/* Left: checklist */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Validation Checklist</h2>
-            <div className="space-y-2">
-              {Object.entries(contract.validationChecks)
-                .filter(([key]) => key !== 'roiCredit')
-                .map(([key, check]) => (
-                  <button key={key} onClick={() => setActiveTab(checkTabMap[key])}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors group text-left">
-                    <ResultIcon status={tabVerified[checkTabMap[key]] ? 'Pass' : check.status} size="lg" />
+            <div className="space-y-1">
+              {checklistItems.map((item, i) => {
+                const isLast = i === checklistItems.length - 1;
+                return (
+                  <button key={item.key} onClick={() => setActiveTab(item.tab)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors group text-left ${isLast ? 'mt-2 border border-dashed border-blue-200 bg-blue-50/40 hover:bg-blue-50' : ''}`}>
+                    <ResultIcon status={item.status} size="lg" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-slate-800 group-hover:text-blue-700">{checkLabels[key]}</div>
-                      <div className="text-xs text-slate-500 truncate">{check.message}</div>
+                      <div className={`text-sm font-semibold ${isLast ? 'text-blue-800' : 'text-slate-800'} group-hover:text-blue-700`}>
+                        {item.label}
+                        {isLast && (
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Final gate</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-500 truncate">{item.message}</div>
                     </div>
                     <svg className="w-4 h-4 text-slate-300 group-hover:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
-                ))}
+                );
+              })}
             </div>
 
             {/* ROI & Credit approval indicators */}
@@ -244,7 +304,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
                     <div>
                       <div className="text-sm font-semibold text-slate-800">Credit</div>
                       <div className="text-xs text-slate-500">
-                        {contract.roi >= 5 ? 'No approval required' : `Approver: Phil Marsden (Credit Director)`}
+                        {contract.roi >= 5 ? 'No approval required' : 'Approver: Phil Marsden (Credit Director)'}
                       </div>
                     </div>
                   </div>
@@ -274,6 +334,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             </div>
           </div>
 
+          {/* Right: contract summary + progress */}
           <div className="space-y-4">
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Contract Summary</h2>
@@ -296,28 +357,51 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
               </dl>
             </div>
 
-            {/* Overall validation progress */}
+            {/* Review progress */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3">Review Progress</h2>
-              {Object.entries(tabVerified).filter(([tab]) => tab !== 'roi').map(([tab, done]) => (
-                <div key={tab} className="flex items-center justify-between py-1.5">
-                  <span className="text-sm text-slate-600 capitalize">{tab}</span>
-                  {done
+              {[
+                { key: 'data',       label: 'Data' },
+                { key: 'pricing',    label: 'Pricing' },
+                { key: 'quote',      label: 'Quote (Curve & Indicators)' },
+                { key: 'signature',  label: 'Signature' },
+                { key: 'aqApproval', label: 'AQ Approval', final: true },
+              ].map(({ key, label, final }) => (
+                <div key={key} className={`flex items-center justify-between py-1.5 ${final ? 'mt-1 pt-2 border-t border-slate-100' : ''}`}>
+                  <span className={`text-sm text-slate-600 ${final ? 'font-semibold' : ''}`}>
+                    {label}
+                    {final && <span className="ml-1.5 text-xs text-blue-600 font-normal">(final gate)</span>}
+                  </span>
+                  {tabVerified[key]
                     ? <span className="text-xs text-green-700 font-semibold flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>Complete</span>
                     : <span className="text-xs text-amber-700 font-semibold">Pending</span>}
                 </div>
               ))}
             </div>
+
+            {/* AQ Approval call-to-action if all other tabs done */}
+            {!tabVerified.aqApproval && ['data','pricing','quote','signature'].every(k => tabVerified[k]) && (
+              <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-blue-900">All checks complete — AQ Approval pending</div>
+                  <div className="text-xs text-blue-700 mt-0.5">Confirm Trading team approval to unlock "Proceed to Data Sheet"</div>
+                </div>
+                <button onClick={() => setActiveTab('aq-approval')}
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shrink-0 ml-3">
+                  Go to AQ Approval →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {activeTab === 'data' && <DataTab contract={contract} onMarkReviewed={() => markVerified('data')} reviewed={tabVerified.data} />}
-      {activeTab === 'pricing' && <PricingTab contract={contract} onMarkVerified={() => markVerified('pricing')} verified={tabVerified.pricing} />}
-      {activeTab === 'curve' && <CurveTab contract={contract} onMarkVerified={() => markVerified('curve')} verified={tabVerified.curve} onReferToTrading={handleReferToTrading} />}
-      {activeTab === 'indicators' && <IndicatorsTab contract={contract} onMarkReviewed={() => markVerified('indicators')} reviewed={tabVerified.indicators} />}
-{activeTab === 'signature' && <SignatureTab contract={contract} onVerified={() => markVerified('signature')} isVerified={tabVerified.signature} />}
-      {activeTab === 'audit' && <AuditTrailTab events={contract.auditTrail} contractRef={contract.ref} />}
+      {activeTab === 'data'        && <DataTab contract={contract} onMarkReviewed={() => markVerified('data')} reviewed={tabVerified.data} />}
+      {activeTab === 'pricing'     && <PricingTab contract={contract} onMarkVerified={() => markVerified('pricing')} verified={tabVerified.pricing} />}
+      {activeTab === 'quote'       && <QuoteTab contract={contract} onMarkVerified={() => markVerified('quote')} verified={tabVerified.quote} />}
+      {activeTab === 'signature'   && <SignatureTab contract={contract} onVerified={() => markVerified('signature')} isVerified={tabVerified.signature} />}
+      {activeTab === 'aq-approval' && <AQApprovalTab contract={contract} confirmed={tabVerified.aqApproval} onConfirm={() => markVerified('aqApproval')} />}
+      {activeTab === 'audit'       && <AuditTrailTab events={contract.auditTrail} contractRef={contract.ref} />}
     </div>
   );
 }

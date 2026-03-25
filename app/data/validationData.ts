@@ -1,7 +1,7 @@
 export type ContractStatus = 'Pending' | 'Auto-Approved' | 'Manual Review' | 'Failed' | 'Accepted';
 export type ContractType = 'Renewal' | 'New Business';
 export type ValidationResult = 'Pass' | 'Fail' | 'Warning' | 'Pending';
-export type TabId = 'overview' | 'data' | 'pricing' | 'curve' | 'indicators' | 'roi' | 'signature';
+export type TabId = 'overview' | 'data' | 'pricing' | 'quote' | 'signature' | 'aq-approval';
 export type CreditStatus = 'N/A' | 'Pending' | 'Approved' | 'Rejected';
 
 export interface ValidationCheck {
@@ -188,9 +188,9 @@ export const initialContracts: Contract[] = [
     validationChecks: {
       dataIntegrity:     { status: 'Pass', message: 'All data checks passed', tab: 'data' },
       pricingAccuracy:   { status: 'Pass', message: 'Unit rate and standing charge verified', tab: 'pricing' },
-      curveAlignment:    { status: 'Pass', message: 'Contract aligned to approved curve', tab: 'curve' },
-      ampIndicators:     { status: 'Pass', message: 'No AMP conflicts detected', tab: 'indicators' },
-      roiCredit:         { status: 'Pass', message: 'ROI 8.2% — above 5% threshold, no credit approval required', tab: 'roi' },
+      curveAlignment:    { status: 'Pass', message: 'Contract aligned to approved curve', tab: 'quote' },
+      ampIndicators:     { status: 'Pass', message: 'No AMP conflicts detected', tab: 'quote' },
+      roiCredit:         { status: 'Pass', message: 'ROI 8.2% — above 5% threshold, no credit approval required', tab: 'aq-approval' },
       signatureReadiness:{ status: 'Pass', message: 'Signatory verified against Companies House', tab: 'signature' },
     },
     pricingRows: BASE_PRICING_ROWS,
@@ -249,9 +249,9 @@ export const initialContracts: Contract[] = [
     validationChecks: {
       dataIntegrity:     { status: 'Pass', message: 'All data checks passed', tab: 'data' },
       pricingAccuracy:   { status: 'Pass', message: 'Unit rate and standing charge verified', tab: 'pricing' },
-      curveAlignment:    { status: 'Pass', message: 'Contract aligned to approved curve', tab: 'curve' },
-      ampIndicators:     { status: 'Pass', message: 'No AMP conflicts detected', tab: 'indicators' },
-      roiCredit:         { status: 'Fail', message: 'ROI 3.1% — below 5% credit threshold. Credit approval required.', tab: 'roi' },
+      curveAlignment:    { status: 'Pass', message: 'Contract aligned to approved curve', tab: 'quote' },
+      ampIndicators:     { status: 'Pass', message: 'No AMP conflicts detected', tab: 'quote' },
+      roiCredit:         { status: 'Fail', message: 'ROI 3.1% — below 5% credit threshold. Credit approval required.', tab: 'aq-approval' },
       signatureReadiness:{ status: 'Warning', message: 'Signatory not yet verified', tab: 'signature' },
     },
     pricingRows: BASE_PRICING_ROWS.map(r => ({ ...r, value: +(r.value * 0.895).toFixed(4) })),
@@ -308,9 +308,9 @@ export const initialContracts: Contract[] = [
     validationChecks: {
       dataIntegrity:     { status: 'Pass', message: 'All data checks passed', tab: 'data' },
       pricingAccuracy:   { status: 'Warning', message: 'Standing charge variance detected (+£0.16/day vs contract)', tab: 'pricing' },
-      curveAlignment:    { status: 'Fail', message: 'Contract locked to superseded curve — approval required', tab: 'curve' },
-      ampIndicators:     { status: 'Warning', message: '2 AMP indicators require review', tab: 'indicators' },
-      roiCredit:         { status: 'Pass', message: 'ROI 6.8% — above 5% threshold', tab: 'roi' },
+      curveAlignment:    { status: 'Fail', message: 'Contract locked to superseded curve — approval required', tab: 'quote' },
+      ampIndicators:     { status: 'Warning', message: '2 AMP indicators require review', tab: 'quote' },
+      roiCredit:         { status: 'Pass', message: 'ROI 6.8% — above 5% threshold', tab: 'aq-approval' },
       signatureReadiness:{ status: 'Warning', message: 'Signatory not yet verified', tab: 'signature' },
     },
     pricingRows: BASE_PRICING_ROWS,
