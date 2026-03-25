@@ -95,25 +95,29 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
     return <span className={`ml-1.5 inline-block w-1.5 h-1.5 rounded-full ${result === 'Fail' ? 'bg-red-500' : 'bg-amber-400'}`} />;
   };
 
+  // Multi-MPAN context for checklist labels
+  const mpanCount   = contract.mpans?.length ?? 0;
+  const mpanBadge   = mpanCount > 1 ? ` (${mpanCount} MPANs)` : '';
+
   // Overview checklist — 5 items mapping to the 5 content tabs
   const checklistItems: { key: string; label: string; message: string; status: ValidationResult; tab: AllTabs }[] = [
     {
       key: 'data',
-      label: 'Data Integrity',
+      label: `Data Integrity${mpanBadge}`,
       message: checks.dataIntegrity.message,
       status: tabVerified.data ? 'Pass' : checks.dataIntegrity.status,
       tab: 'data',
     },
     {
       key: 'pricing',
-      label: 'Pricing Accuracy',
+      label: `Pricing Accuracy${mpanBadge}`,
       message: checks.pricingAccuracy.message,
       status: tabVerified.pricing ? 'Pass' : checks.pricingAccuracy.status,
       tab: 'pricing',
     },
     {
       key: 'quote',
-      label: 'Quote — Curve & Indicators',
+      label: `Quote — Curve & Indicators${mpanBadge}`,
       message: quoteMessage,
       status: quoteStatus,
       tab: 'quote',
@@ -344,7 +348,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
                   { label: 'Customer', value: contract.customer },
                   { label: 'Supplier', value: contract.supplier },
                   { label: 'Supply Period', value: `${contract.contractStart} – ${contract.contractEnd}` },
-                  { label: 'AQ', value: `${contract.aq.toLocaleString()} kWh` },
+                  { label: 'AQ', value: `${contract.aq.toLocaleString()} kWh${mpanCount > 1 ? ` across ${mpanCount} MPANs` : ''}` },
                   { label: 'Unit Rate', value: `${contract.unitRate.toFixed(4)}p/kWh` },
                   { label: 'Standing Charge', value: `£${contract.standingCharge.toFixed(2)}/day` },
                   { label: 'ROI', value: `${contract.roi}%`, warn: contract.roi < 5 },
@@ -361,9 +365,9 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3">Review Progress</h2>
               {[
-                { key: 'data',       label: 'Data' },
-                { key: 'pricing',    label: 'Pricing' },
-                { key: 'quote',      label: 'Quote (Curve & Indicators)' },
+                { key: 'data',       label: mpanCount > 1 ? `Data (${mpanCount} MPANs)` : 'Data' },
+                { key: 'pricing',    label: mpanCount > 1 ? `Pricing (${mpanCount} MPANs)` : 'Pricing' },
+                { key: 'quote',      label: mpanCount > 1 ? `Quote (${mpanCount} MPANs)` : 'Quote (Curve & Indicators)' },
                 { key: 'signature',  label: 'Signature' },
                 { key: 'aqApproval', label: 'AQ Approval', final: true },
               ].map(({ key, label, final }) => (

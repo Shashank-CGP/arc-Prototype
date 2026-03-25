@@ -56,6 +56,24 @@ export interface AuditEvent {
   category: 'auto' | 'manual' | 'system';
 }
 
+export interface MpanSite {
+  mpan: string;
+  siteRef: string;
+  aq: number;
+  unitRate: number;
+  standingCharge: number;
+  contractStart: string;
+  contractEnd: string;
+  dataChecks: DataCheck[];
+  ampIndicators: AmpIndicator[];
+  pricingRows: PricingRow[];
+  standingRows: PricingRow[];
+  curveData: CurvePoint[];
+  curveName: string;
+  currentCurveName: string;
+  hhDataQuality: ValidationResult;
+}
+
 export interface Contract {
   id: string;
   ref: string;
@@ -98,6 +116,27 @@ export interface Contract {
     directors: Director[];
   };
   auditTrail: AuditEvent[];
+  mpans?: MpanSite[];
+}
+
+/** Builds a synthetic single-site contract from a MpanSite for use in per-MPAN tab renderers. */
+export function buildMpanContract(base: Contract, site: MpanSite): Contract {
+  return {
+    ...base,
+    mpan: site.mpan,
+    unitRate: site.unitRate,
+    standingCharge: site.standingCharge,
+    contractStart: site.contractStart,
+    contractEnd: site.contractEnd,
+    dataChecks: site.dataChecks,
+    ampIndicators: site.ampIndicators,
+    pricingRows: site.pricingRows,
+    standingRows: site.standingRows,
+    curveData: site.curveData,
+    curveName: site.curveName,
+    currentCurveName: site.currentCurveName,
+    mpans: undefined,
+  };
 }
 
 // ─── Curve helpers ────────────────────────────────────────────────
@@ -164,7 +203,7 @@ const MISMATCH_STANDING_ROWS: PricingRow[] = [
 // ─── Contracts ────────────────────────────────────────────────────
 
 export const initialContracts: Contract[] = [
-  // ── CON-2024-04421 — Full happy path ─────────────────────────
+  // ── CON-2024-04421 — Multi-MPAN (3 sites) ───────────────────
   {
     id: 'c1',
     ref: 'CON-2024-04421',
@@ -180,19 +219,20 @@ export const initialContracts: Contract[] = [
     unitRate: 24.6424,
     standingCharge: 0.89,
     roi: 8.2,
-    status: 'Auto-Approved',
-    failureCount: 0,
+    status: 'Manual Review',
+    failureCount: 2,
     creditApprovalStatus: 'N/A',
     creditApprover: '',
     signatoryName: 'John Smith',
     validationChecks: {
-      dataIntegrity:     { status: 'Pass', message: 'All data checks passed', tab: 'data' },
-      pricingAccuracy:   { status: 'Pass', message: 'Unit rate and standing charge verified', tab: 'pricing' },
-      curveAlignment:    { status: 'Pass', message: 'Contract aligned to approved curve', tab: 'quote' },
-      ampIndicators:     { status: 'Pass', message: 'No AMP conflicts detected', tab: 'quote' },
-      roiCredit:         { status: 'Pass', message: 'ROI 8.2% — above 5% threshold, no credit approval required', tab: 'aq-approval' },
-      signatureReadiness:{ status: 'Pass', message: 'Signatory verified against Companies House', tab: 'signature' },
+      dataIntegrity:     { status: 'Fail',    message: '1 of 3 sites: MPAN 1012345678901 site reference mismatch (red)', tab: 'data' },
+      pricingAccuracy:   { status: 'Warning', message: '2 of 3 sites: BSUoS above range (site 2), MAP variance (site 3)', tab: 'pricing' },
+      curveAlignment:    { status: 'Fail',    message: '1 of 3 sites: MPAN 1012345678901 locked to superseded ARC-CURVE-2025-Q3-v1', tab: 'quote' },
+      ampIndicators:     { status: 'Fail',    message: '2 of 3 sites have AMP indicators requiring review', tab: 'quote' },
+      roiCredit:         { status: 'Pass',    message: 'ROI 8.2% — above 5% threshold, no credit approval required', tab: 'aq-approval' },
+      signatureReadiness:{ status: 'Pass',    message: 'Signatory verified against Companies House', tab: 'signature' },
     },
+    // Top-level fields retained for header display; per-site detail lives in mpans[]
     pricingRows: BASE_PRICING_ROWS,
     standingRows: BASE_STANDING_ROWS,
     curveData: makeCurve(24.6424, false),
@@ -204,6 +244,7 @@ export const initialContracts: Contract[] = [
       { id: 'd3', name: 'Contract start date',  expected: '01/10/2025', actual: '01/10/2025', status: 'Pass' },
       { id: 'd4', name: 'Contract duration',    expected: '24 months', actual: '24 months', status: 'Pass' },
       { id: 'd5', name: 'Supplier code',        expected: 'Engie (ENE)', actual: 'ENE', status: 'Pass' },
+      { id: 'd6', name: 'HH Data Quality',      expected: 'Complete 30-min intervals', actual: 'All intervals complete', status: 'Pass' },
     ],
     ampIndicators: [],
     companiesHouse: {
@@ -216,12 +257,93 @@ export const initialContracts: Contract[] = [
       ],
     },
     auditTrail: [
-      { id: 'a1', timestamp: '2025-09-12T09:02:11Z', action: 'Contract Submitted', user: 'James Okafor', detail: 'Contract CON-2024-04421 submitted for validation.', category: 'system' },
-      { id: 'a2', timestamp: '2025-09-12T09:02:15Z', action: 'Auto-Validation Run', user: 'System (Arc)', detail: 'All 6 validation checks passed. Contract routed to Auto-Approved.', category: 'auto' },
-      { id: 'a3', timestamp: '2025-09-12T09:02:16Z', action: 'Pricing Verified', user: 'System (Arc)', detail: 'Unit rate 24.6424p/kWh matches calculated total. Standing charge £0.89/day verified.', category: 'auto' },
-      { id: 'a4', timestamp: '2025-09-12T09:02:17Z', action: 'Curve Alignment Confirmed', user: 'System (Arc)', detail: 'Contract locked to ARC-CURVE-2025-Q4-v3 — current approved curve. No divergence.', category: 'auto' },
+      { id: 'a1', timestamp: '2025-09-12T09:02:11Z', action: 'Contract Submitted', user: 'James Okafor', detail: 'Contract CON-2024-04421 submitted for validation. 3 MPANs: 1580000277243, 1012345678901, 1087234567800.', category: 'system' },
+      { id: 'a2', timestamp: '2025-09-12T09:02:15Z', action: 'Auto-Validation Run', user: 'System (Arc)', detail: '2 failures detected across 3 MPANs: curve mismatch on MPAN 1012345678901, site reference mismatch on MPAN 1012345678901. Routed to Manual Review.', category: 'auto' },
+      { id: 'a3', timestamp: '2025-09-12T09:02:16Z', action: 'Curve Mismatch Flagged', user: 'System (Arc)', detail: 'MPAN 1012345678901 locked to ARC-CURVE-2025-Q3-v1 (superseded). Current approved curve: ARC-CURVE-2025-Q4-v3.', category: 'auto' },
+      { id: 'a4', timestamp: '2025-09-12T09:02:17Z', action: 'AMP Indicator Flagged', user: 'System (Arc)', detail: 'MPAN 1012345678901: site reference mismatch (red). MPAN 1087234567800: start date discrepancy (amber).', category: 'auto' },
       { id: 'a5', timestamp: '2025-09-12T09:02:18Z', action: 'ROI Check Passed', user: 'System (Arc)', detail: 'ROI 8.2% exceeds credit threshold of 5%. No credit approval required.', category: 'auto' },
       { id: 'a6', timestamp: '2025-09-12T09:02:19Z', action: 'Signatory Verified', user: 'System (Arc)', detail: 'John Smith confirmed Director at Meridian Foods Ltd (Companies House No. 08234510).', category: 'auto' },
+    ],
+    mpans: [
+      // ── Site 1: 1580000277243 — all clean ─────────────────────
+      {
+        mpan: '1580000277243',
+        siteRef: 'SITE-MFG-001',
+        aq: 200000,
+        unitRate: 24.6424,
+        standingCharge: 0.89,
+        contractStart: '01/10/2025',
+        contractEnd: '30/09/2027',
+        hhDataQuality: 'Pass',
+        dataChecks: [
+          { id: 'd1', name: 'MPAN format',          expected: '13-digit numeric', actual: '1580000277243', status: 'Pass' },
+          { id: 'd2', name: 'EAC within tolerance', expected: '150,000–250,000 kWh', actual: '200,000 kWh', status: 'Pass' },
+          { id: 'd3', name: 'Contract start date',  expected: '01/10/2025', actual: '01/10/2025', status: 'Pass' },
+          { id: 'd4', name: 'Contract duration',    expected: '24 months', actual: '24 months', status: 'Pass' },
+          { id: 'd5', name: 'Supplier code',        expected: 'Engie (ENE)', actual: 'ENE', status: 'Pass' },
+          { id: 'd6', name: 'HH Data Quality',      expected: 'Complete 30-min intervals', actual: 'All intervals complete', status: 'Pass' },
+        ],
+        ampIndicators: [],
+        pricingRows: BASE_PRICING_ROWS,
+        standingRows: BASE_STANDING_ROWS,
+        curveData: makeCurve(24.6424, false),
+        curveName: 'ARC-CURVE-2025-Q4-v3',
+        currentCurveName: 'ARC-CURVE-2025-Q4-v3',
+      },
+      // ── Site 2: 1012345678901 — curve mismatch + site ref fail ─
+      {
+        mpan: '1012345678901',
+        siteRef: 'SITE-MFG-002',
+        aq: 180000,
+        unitRate: 24.6424,
+        standingCharge: 0.89,
+        contractStart: '01/10/2025',
+        contractEnd: '30/09/2027',
+        hhDataQuality: 'Warning',
+        dataChecks: [
+          { id: 'd1', name: 'MPAN format',          expected: '13-digit numeric', actual: '1012345678901', status: 'Pass' },
+          { id: 'd2', name: 'EAC within tolerance', expected: '130,000–230,000 kWh', actual: '180,000 kWh', status: 'Pass' },
+          { id: 'd3', name: 'Contract start date',  expected: '01/10/2025', actual: '01/10/2025', status: 'Pass' },
+          { id: 'd4', name: 'Contract duration',    expected: '24 months', actual: '24 months', status: 'Pass' },
+          { id: 'd5', name: 'Supplier code',        expected: 'Engie (ENE)', actual: 'ENE', status: 'Pass' },
+          { id: 'd6', name: 'HH Data Quality',      expected: 'Complete 30-min intervals', actual: '3 missing intervals (HH 14, 27, 31)', status: 'Warning' },
+        ],
+        ampIndicators: [
+          { id: 'amp1', label: 'Site reference mismatch', severity: 'red',   detail: 'SITE-MFG-002 on contract vs SITE-002-ALT in AMP — manual reconciliation required before acceptance' },
+        ],
+        pricingRows: BASE_PRICING_ROWS.map(r => r.id === 'bsuos' ? { ...r, value: 1.38, anomalyRange: { min: 0.8, max: 1.2 } } : r),
+        standingRows: BASE_STANDING_ROWS,
+        curveData: makeCurve(24.85, true),
+        curveName: 'ARC-CURVE-2025-Q3-v1',
+        currentCurveName: 'ARC-CURVE-2025-Q4-v3',
+      },
+      // ── Site 3: 1087234567800 — standing charge variance + AMP amber ─
+      {
+        mpan: '1087234567800',
+        siteRef: 'SITE-MFG-003',
+        aq: 105000,
+        unitRate: 24.6424,
+        standingCharge: 1.05,
+        contractStart: '01/10/2025',
+        contractEnd: '30/09/2027',
+        hhDataQuality: 'Pass',
+        dataChecks: [
+          { id: 'd1', name: 'MPAN format',          expected: '13-digit numeric', actual: '1087234567800', status: 'Pass' },
+          { id: 'd2', name: 'EAC within tolerance', expected: '80,000–130,000 kWh', actual: '105,000 kWh', status: 'Pass' },
+          { id: 'd3', name: 'Contract start date',  expected: '01/10/2025', actual: '01/10/2025', status: 'Pass' },
+          { id: 'd4', name: 'Contract duration',    expected: '24 months', actual: '24 months', status: 'Pass' },
+          { id: 'd5', name: 'Supplier code',        expected: 'Engie (ENE)', actual: 'ENE', status: 'Pass' },
+          { id: 'd6', name: 'HH Data Quality',      expected: 'Complete 30-min intervals', actual: 'All intervals complete', status: 'Pass' },
+        ],
+        ampIndicators: [
+          { id: 'amp2', label: 'Start date discrepancy', severity: 'amber', detail: 'Contract start 01/10/2025 vs AMP effective date 15/10/2025 — 14-day gap requires review' },
+        ],
+        pricingRows: BASE_PRICING_ROWS,
+        standingRows: MISMATCH_STANDING_ROWS,
+        curveData: makeCurve(24.6424, false),
+        curveName: 'ARC-CURVE-2025-Q4-v3',
+        currentCurveName: 'ARC-CURVE-2025-Q4-v3',
+      },
     ],
   },
 

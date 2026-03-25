@@ -1,5 +1,7 @@
 'use client';
-import { Contract, DataCheck, AmpIndicator, ValidationResult } from '../../../data/validationData';
+import { useState } from 'react';
+import { Contract, DataCheck, AmpIndicator, ValidationResult, MpanSite, buildMpanContract } from '../../../data/validationData';
+import { MpanSummaryBar, MpanSubTabBar, MpanStatusFn } from './MpanSubTabs';
 
 interface Props {
   contract: Contract;
@@ -7,7 +9,19 @@ interface Props {
   reviewed: boolean;
 }
 
-function ResultIcon({ status }: { status: ValidationResult }) {
+// ─── Per-MPAN status derivation ───────────────────────────────────
+
+export function getMpanDataStatus(site: MpanSite): ValidationResult {
+  if (site.ampIndicators.some(a => a.severity === 'red'))   return 'Fail';
+  if (site.dataChecks.some(c => c.status === 'Fail'))        return 'Fail';
+  if (site.ampIndicators.some(a => a.severity === 'amber')) return 'Warning';
+  if (site.dataChecks.some(c => c.status === 'Warning'))     return 'Warning';
+  return 'Pass';
+}
+
+// ─── Shared result badge ──────────────────────────────────────────
+
+function ResultBadge({ status }: { status: ValidationResult }) {
   if (status === 'Pass') return (
     <span className="inline-flex items-center gap-1 text-green-700 font-semibold text-xs bg-green-50 px-2 py-0.5 rounded-full">
       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -28,16 +42,27 @@ function ResultIcon({ status }: { status: ValidationResult }) {
   );
 }
 
-export function DataTab({ contract, onMarkReviewed, reviewed }: Props) {
+// ─── Single-site content (reused for both single and multi paths) ─
+
+interface ContentProps {
+  contract: Contract;
+  onMarkReviewed: () => void;
+  reviewed: boolean;
+  mpanLabel?: string;
+}
+
+function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentProps) {
   const hasAmps = contract.ampIndicators.length > 0;
   const allPass = contract.dataChecks.every(c => c.status === 'Pass') && !hasAmps;
 
   return (
     <div className="space-y-5">
-      {/* Auto-validated checks */}
+      {/* Data integrity checks */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Data Integrity Checks</h2>
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
+            Data Integrity Checks{mpanLabel && <span className="ml-2 font-mono text-slate-500 normal-case font-normal text-xs">— {mpanLabel}</span>}
+          </h2>
           <span className="text-xs text-slate-400">{contract.dataChecks.filter(c => c.status === 'Pass').length} of {contract.dataChecks.length} passed</span>
         </div>
         <table className="w-full text-sm">
@@ -51,18 +76,18 @@ export function DataTab({ contract, onMarkReviewed, reviewed }: Props) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {contract.dataChecks.map(check => (
-              <tr key={check.id} className={check.status !== 'Pass' ? 'bg-red-50' : ''}>
+              <tr key={check.id} className={check.status !== 'Pass' ? 'bg-amber-50/60' : ''}>
                 <td className="px-5 py-3 font-medium text-slate-700">{check.name}</td>
                 <td className="px-5 py-3 font-mono text-xs text-slate-500">{check.expected}</td>
-                <td className={`px-5 py-3 font-mono text-xs font-semibold ${check.status !== 'Pass' ? 'text-red-700' : 'text-slate-700'}`}>{check.actual}</td>
-                <td className="px-5 py-3"><ResultIcon status={check.status} /></td>
+                <td className={`px-5 py-3 font-mono text-xs font-semibold ${check.status === 'Fail' ? 'text-red-700' : check.status === 'Warning' ? 'text-amber-700' : 'text-slate-700'}`}>{check.actual}</td>
+                <td className="px-5 py-3"><ResultBadge status={check.status} /></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* AMP Indicators */}
+      {/* AMP indicators */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">AMP Indicators</h2>
@@ -100,15 +125,63 @@ export function DataTab({ contract, onMarkReviewed, reviewed }: Props) {
         {reviewed ? (
           <span className="flex items-center gap-2 text-sm text-green-700 font-semibold">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-            Marked as Reviewed
+            {mpanLabel ? `MPAN ${mpanLabel} Reviewed` : 'Marked as Reviewed'}
           </span>
         ) : (
           <button onClick={onMarkReviewed}
             className={`px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors ${allPass ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500 hover:bg-amber-600'}`}>
-            Mark as Reviewed
+            {mpanLabel ? `Mark MPAN ${mpanLabel} as Reviewed` : 'Mark as Reviewed'}
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Main export ──────────────────────────────────────────────────
+
+export function DataTab({ contract, onMarkReviewed, reviewed }: Props) {
+  const isMulti = (contract.mpans?.length ?? 0) > 1;
+
+  const [activeMpan, setActiveMpan] = useState(contract.mpans?.[0]?.mpan ?? contract.mpan);
+  const [reviewedMpans, setReviewedMpans] = useState<Set<string>>(() => {
+    if (!isMulti) return new Set<string>();
+    // Auto-verify MPANs with no issues on initial load
+    return new Set(
+      (contract.mpans ?? [])
+        .filter(s => getMpanDataStatus(s) === 'Pass')
+        .map(s => s.mpan)
+    );
+  });
+
+  if (!isMulti) {
+    return <DataContent contract={contract} onMarkReviewed={onMarkReviewed} reviewed={reviewed} />;
+  }
+
+  const sites = contract.mpans!;
+
+  const handleMpanReviewed = (mpan: string) => {
+    setReviewedMpans(prev => {
+      const next = new Set(prev).add(mpan);
+      if (next.size === sites.length && !reviewed) onMarkReviewed();
+      return next;
+    });
+  };
+
+  const activeSite    = sites.find(s => s.mpan === activeMpan)!;
+  const mpanContract  = buildMpanContract(contract, activeSite);
+  const isActiveReviewed = reviewedMpans.has(activeMpan);
+
+  return (
+    <div className="space-y-4">
+      <MpanSummaryBar sites={sites} getStatus={getMpanDataStatus} verifiedSet={reviewedMpans} />
+      <MpanSubTabBar  sites={sites} activeMpan={activeMpan} onSelect={setActiveMpan} getStatus={getMpanDataStatus} verifiedSet={reviewedMpans} />
+      <DataContent
+        contract={mpanContract}
+        onMarkReviewed={() => handleMpanReviewed(activeMpan)}
+        reviewed={isActiveReviewed}
+        mpanLabel={activeMpan}
+      />
     </div>
   );
 }
