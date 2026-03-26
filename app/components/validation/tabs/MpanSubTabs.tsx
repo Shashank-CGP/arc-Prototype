@@ -11,44 +11,86 @@ interface SummaryBarProps {
   verifiedSet: Set<string>;
 }
 
+function StatusPill({ label, count, variant }: { label: string; count: number; variant: 'green' | 'red' | 'amber' | 'neutral' }) {
+  const colours = {
+    green:   'bg-green-50  text-green-700  ring-green-200',
+    red:     'bg-red-50    text-red-700    ring-red-200',
+    amber:   'bg-amber-50  text-amber-700  ring-amber-200',
+    neutral: 'bg-slate-50  text-slate-500  ring-slate-200',
+  };
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ${colours[variant]}`}>
+      {variant === 'green' && (
+        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      )}
+      {variant === 'red' && (
+        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      )}
+      {variant === 'amber' && (
+        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01" />
+        </svg>
+      )}
+      {count} {label}
+    </span>
+  );
+}
+
 export function MpanSummaryBar({ sites, getStatus, verifiedSet }: SummaryBarProps) {
-  const passed   = sites.filter(s => verifiedSet.has(s.mpan)).length;
+  const verified = sites.filter(s => verifiedSet.has(s.mpan)).length;
   const failures = sites.filter(s => !verifiedSet.has(s.mpan) && getStatus(s) === 'Fail').length;
   const warnings = sites.filter(s => !verifiedSet.has(s.mpan) && getStatus(s) === 'Warning').length;
-  const pending  = sites.length - verifiedSet.size;
+  const pending  = sites.filter(s => !verifiedSet.has(s.mpan) && getStatus(s) === 'Pass').length;
+  const allDone  = verified === sites.length;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-3 flex items-center gap-2 flex-wrap text-sm">
-      <span className="font-medium text-slate-700">
-        Total MPANs: <span className="font-bold text-slate-900">{sites.length}</span>
-      </span>
-      <span className="text-slate-300">|</span>
-      <span className={`font-medium ${passed > 0 ? 'text-green-700' : 'text-slate-400'}`}>
-        Passed: <span className="font-bold">{passed}</span>
-      </span>
-      <span className="text-slate-300">|</span>
-      <span className={`font-medium ${failures > 0 ? 'text-red-700' : 'text-slate-400'}`}>
-        Failures: <span className="font-bold">{failures}</span>
-      </span>
-      <span className="text-slate-300">|</span>
-      {warnings > 0 && (
-        <>
-          <span className="font-medium text-amber-700">
-            Warnings: <span className="font-bold">{warnings}</span>
-          </span>
-          <span className="text-slate-300">|</span>
-        </>
-      )}
-      <span className={`font-medium ${pending > 0 ? 'text-amber-700' : 'text-slate-400'}`}>
-        Pending review: <span className="font-bold">{pending}</span>
-      </span>
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-3">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        {/* Left: headline */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-800">{sites.length} MPANs in this quote</span>
+          {allDone && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full ring-1 ring-green-200">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+              All verified
+            </span>
+          )}
+        </div>
+        {/* Right: status pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {verified > 0  && <StatusPill label={verified === 1 ? 'verified' : 'verified'} count={verified} variant="green" />}
+          {failures > 0  && <StatusPill label={failures === 1 ? 'failed' : 'failed'} count={failures} variant="red" />}
+          {warnings > 0  && <StatusPill label={warnings === 1 ? 'warning' : 'warnings'} count={warnings} variant="amber" />}
+          {pending > 0   && <StatusPill label={pending === 1 ? 'pending' : 'pending'} count={pending} variant="neutral" />}
+        </div>
+      </div>
+      {/* Per-MPAN mini-list */}
+      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1">
+        {sites.map(s => {
+          const isVerified = verifiedSet.has(s.mpan);
+          const status     = getStatus(s);
+          const colour = isVerified ? 'text-green-700' : status === 'Fail' ? 'text-red-600' : status === 'Warning' ? 'text-amber-600' : 'text-slate-400';
+          const dot    = isVerified ? 'bg-green-500' : status === 'Fail' ? 'bg-red-500' : status === 'Warning' ? 'bg-amber-400' : 'bg-slate-300';
+          return (
+            <span key={s.mpan} className={`flex items-center gap-1.5 text-xs font-mono ${colour}`}>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+              {s.mpan}
+              <span className="font-sans text-slate-400 font-normal">({s.siteRef})</span>
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-// ─── Sub-tab bar ──────────────────────────────────────────────────
+// ─── MPAN dropdown selector ───────────────────────────────────────
 
-interface TabBarProps {
+interface DropdownProps {
   sites: MpanSite[];
   activeMpan: string;
   onSelect: (mpan: string) => void;
@@ -56,47 +98,75 @@ interface TabBarProps {
   verifiedSet: Set<string>;
 }
 
-function StatusIcon({ status, verified }: { status: ValidationResult; verified: boolean }) {
-  if (verified) return (
-    <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-  );
-  if (status === 'Fail') return (
-    <svg className="w-3.5 h-3.5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  );
-  if (status === 'Warning') return (
-    <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  );
-  return <span className="w-2 h-2 rounded-full bg-slate-300 shrink-0 inline-block mt-0.5" />;
+function statusEmoji(status: ValidationResult, verified: boolean): string {
+  if (verified)             return '✓';
+  if (status === 'Fail')    return '✗';
+  if (status === 'Warning') return '⚠';
+  return '○';
 }
 
-export function MpanSubTabBar({ sites, activeMpan, onSelect, getStatus, verifiedSet }: TabBarProps) {
+export function MpanSubTabBar({ sites, activeMpan, onSelect, getStatus, verifiedSet }: DropdownProps) {
+  const activeSite = sites.find(s => s.mpan === activeMpan)!;
+  const activeStatus   = getStatus(activeSite);
+  const activeVerified = verifiedSet.has(activeMpan);
+
+  const borderColour = activeVerified
+    ? 'border-green-400 ring-green-100'
+    : activeStatus === 'Fail'
+      ? 'border-red-400 ring-red-100'
+      : activeStatus === 'Warning'
+        ? 'border-amber-400 ring-amber-100'
+        : 'border-slate-300 ring-slate-100';
+
+  const textColour = activeVerified
+    ? 'text-green-700'
+    : activeStatus === 'Fail'
+      ? 'text-red-700'
+      : activeStatus === 'Warning'
+        ? 'text-amber-700'
+        : 'text-slate-700';
+
   return (
-    <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg overflow-x-auto">
-      {sites.map(site => {
-        const status     = getStatus(site);
-        const isVerified = verifiedSet.has(site.mpan);
-        const isActive   = site.mpan === activeMpan;
-        return (
-          <button key={site.mpan} onClick={() => onSelect(site.mpan)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium whitespace-nowrap transition-colors ${
-              isActive
-                ? 'bg-white shadow-sm text-slate-900 ring-1 ring-slate-200'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
-            }`}>
-            <StatusIcon status={status} verified={isVerified} />
-            {site.mpan}
-            {!isVerified && site.siteRef && (
-              <span className="text-slate-400 font-sans">({site.siteRef})</span>
-            )}
-          </button>
-        );
-      })}
+    <div className="flex items-center gap-3">
+      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">
+        Viewing MPAN
+      </label>
+      <div className="relative flex-1 max-w-sm">
+        <select
+          value={activeMpan}
+          onChange={e => onSelect(e.target.value)}
+          className={`w-full appearance-none bg-white border-2 rounded-lg pl-3 pr-8 py-2 text-sm font-mono font-medium shadow-sm focus:outline-none focus:ring-2 transition-colors ${borderColour} ${textColour}`}
+        >
+          {sites.map(site => {
+            const st  = getStatus(site);
+            const ver = verifiedSet.has(site.mpan);
+            const prefix = statusEmoji(st, ver);
+            return (
+              <option key={site.mpan} value={site.mpan}>
+                {prefix}  {site.mpan}  ({site.siteRef})
+              </option>
+            );
+          })}
+        </select>
+        {/* Custom chevron */}
+        <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
+          <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </span>
+      </div>
+      {/* Status badge next to dropdown */}
+      <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ring-1 ${
+        activeVerified
+          ? 'bg-green-50 text-green-700 ring-green-200'
+          : activeStatus === 'Fail'
+            ? 'bg-red-50 text-red-700 ring-red-200'
+            : activeStatus === 'Warning'
+              ? 'bg-amber-50 text-amber-700 ring-amber-200'
+              : 'bg-slate-50 text-slate-500 ring-slate-200'
+      }`}>
+        {activeVerified ? 'Verified' : activeStatus}
+      </span>
     </div>
   );
 }
