@@ -174,6 +174,14 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
               Audit Trail
             </button>
+            <button onClick={() => window.print()}
+              className="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm flex items-center gap-2"
+              title="Download contract as PDF">
+              <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17a4 4 0 004 4h10a4 4 0 004-4V7a2 2 0 00-2-2h-4l-2-2H7a2 2 0 00-2 2v3" />
+              </svg>
+              Download PDF
+            </button>
             <button onClick={onProceedToAcceptance} disabled={!allVerified}
               className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
               title={!allVerified ? (!tabVerified.aqApproval ? 'AQ Approval must be confirmed by the Trading team before proceeding' : 'All validation checks must be complete') : ''}>
