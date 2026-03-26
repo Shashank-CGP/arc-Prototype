@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { Contract, ValidationResult, CreditStatus } from '../../data/validationData';
-import { DataTab } from './tabs/DataTab';
-import { PricingTab } from './tabs/PricingTab';
-import { QuoteTab } from './tabs/QuoteTab';
+import { DataTab, getMpanDataStatus } from './tabs/DataTab';
+import { PricingTab, getMpanPricingStatus } from './tabs/PricingTab';
+import { QuoteTab, getMpanQuoteStatus } from './tabs/QuoteTab';
 import { SignatureTab } from './tabs/SignatureTab';
 import { AQApprovalTab } from './tabs/AQApprovalTab';
 import { AuditTrailTab } from './AuditTrailTab';
@@ -52,6 +52,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
   });
 
   const [creditStatus, setCreditStatus] = useState<CreditStatus>(contract.creditApprovalStatus);
+  const [mpansOpen, setMpansOpen] = useState(false);
 
   // AQ Approval is the final gate — all checks must be done AND aq approved
   const allVerified = Object.values(tabVerified).every(Boolean);
@@ -191,19 +192,121 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
         </div>
 
         <div className="grid grid-cols-5 gap-4 mt-4 pt-4 border-t border-slate-100">
-          {[
-            { label: 'Account Manager', value: contract.accountManager },
-            { label: 'MPAN', value: contract.mpan, mono: true },
-            { label: 'AQ', value: `${contract.aq.toLocaleString()} kWh` },
-            { label: 'Unit Rate', value: `${contract.unitRate.toFixed(4)}p/kWh` },
-            { label: 'Standing Charge', value: `£${contract.standingCharge.toFixed(2)}/day` },
-          ].map(item => (
-            <div key={item.label}>
-              <div className="text-xs text-slate-500 font-medium mb-0.5">{item.label}</div>
-              <div className={`text-sm font-semibold text-slate-900 ${(item as any).mono ? 'font-mono text-xs' : ''}`}>{item.value}</div>
+          {/* Account Manager */}
+          <div>
+            <div className="text-xs text-slate-500 font-medium mb-0.5">Account Manager</div>
+            <div className="text-sm font-semibold text-slate-900">{contract.accountManager}</div>
+          </div>
+          {/* MPAN — accordion trigger for multi-MPAN */}
+          <div>
+            <div className="text-xs text-slate-500 font-medium mb-0.5">MPAN</div>
+            {mpanCount > 1 ? (
+              <button onClick={() => setMpansOpen(o => !o)}
+                className="flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-800 text-xs font-bold ring-1 ring-blue-200">
+                  {mpanCount} MPANs
+                </span>
+                <svg className={`w-3.5 h-3.5 transition-transform ${mpansOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            ) : (
+              <div className="text-xs font-semibold font-mono text-slate-900">{contract.mpan}</div>
+            )}
+          </div>
+          {/* AQ */}
+          <div>
+            <div className="text-xs text-slate-500 font-medium mb-0.5">AQ</div>
+            <div className="text-sm font-semibold text-slate-900">
+              {contract.aq.toLocaleString()} kWh
+              {mpanCount > 1 && <span className="ml-1 text-xs text-slate-400 font-normal">total</span>}
             </div>
-          ))}
+          </div>
+          {/* Unit Rate */}
+          <div>
+            <div className="text-xs text-slate-500 font-medium mb-0.5">Unit Rate</div>
+            <div className="text-sm font-semibold text-slate-900">{contract.unitRate.toFixed(4)}p/kWh</div>
+          </div>
+          {/* Standing Charge */}
+          <div>
+            <div className="text-xs text-slate-500 font-medium mb-0.5">Standing Charge</div>
+            <div className="text-sm font-semibold text-slate-900">£{contract.standingCharge.toFixed(2)}/day</div>
+          </div>
         </div>
+
+        {/* MPAN accordion panel */}
+        {mpanCount > 1 && mpansOpen && (
+          <div className="mt-3 rounded-lg border border-slate-200 overflow-hidden">
+            {/* Header row */}
+            <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] gap-x-4 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              <span>MPAN</span>
+              <span>Site Ref</span>
+              <span className="text-right">AQ (kWh)</span>
+              <span className="text-center">Data</span>
+              <span className="text-center">Pricing</span>
+              <span className="text-center">Quote</span>
+              <span></span>
+            </div>
+            {contract.mpans!.map((site, idx) => {
+              const dSt  = getMpanDataStatus(site);
+              const pSt  = getMpanPricingStatus(site);
+              const qSt  = getMpanQuoteStatus(site);
+              const worst = [dSt, pSt, qSt].includes('Fail') ? 'Fail' : [dSt, pSt, qSt].includes('Warning') ? 'Warning' : 'Pass';
+              const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+
+              const StatusCell = ({ st }: { st: ValidationResult }) => {
+                if (st === 'Pass')    return <span className="inline-flex justify-center"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></span>;
+                if (st === 'Fail')    return <span className="inline-flex justify-center"><svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></span>;
+                if (st === 'Warning') return <span className="inline-flex justify-center"><svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></span>;
+                return <span className="inline-flex justify-center w-2 h-2 rounded-full bg-slate-300 mt-1 mx-auto block" />;
+              };
+
+              // Collect error/warning messages for this MPAN
+              const issues: { cat: string; msg: string; sev: 'Fail' | 'Warning' }[] = [];
+              site.dataChecks.filter(c => c.status !== 'Pass').forEach(c =>
+                issues.push({ cat: 'Data', msg: `${c.name}: expected ${c.expected}, got ${c.actual}`, sev: c.status as 'Fail' | 'Warning' }));
+              site.ampIndicators.forEach(a =>
+                issues.push({ cat: 'Data', msg: a.detail, sev: a.severity === 'red' ? 'Fail' : 'Warning' }));
+              [...site.pricingRows, ...site.standingRows].filter(r => r.anomalyRange && (r.value < r.anomalyRange.min || r.value > r.anomalyRange.max)).forEach(r =>
+                issues.push({ cat: 'Pricing', msg: `${r.name}: ${r.value} outside range ${r.anomalyRange!.min}–${r.anomalyRange!.max}`, sev: 'Warning' }));
+              if (site.curveName !== site.currentCurveName)
+                issues.push({ cat: 'Quote', msg: `Curve locked to superseded ${site.curveName} (current: ${site.currentCurveName})`, sev: 'Fail' });
+
+              return (
+                <div key={site.mpan} className={`${rowBg} border-b border-slate-100 last:border-0`}>
+                  <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] gap-x-4 items-center px-4 py-2.5">
+                    <span className="font-mono text-xs font-semibold text-slate-800">{site.mpan}</span>
+                    <span className="text-xs text-slate-600">{site.siteRef}</span>
+                    <span className="text-xs text-slate-700 font-medium text-right tabular-nums">{site.aq.toLocaleString()}</span>
+                    <StatusCell st={dSt} />
+                    <StatusCell st={pSt} />
+                    <StatusCell st={qSt} />
+                    <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ring-1 ${
+                      worst === 'Fail'    ? 'bg-red-50 text-red-700 ring-red-200' :
+                      worst === 'Warning' ? 'bg-amber-50 text-amber-700 ring-amber-200' :
+                      'bg-green-50 text-green-700 ring-green-200'
+                    }`}>{worst}</span>
+                  </div>
+                  {/* Inline issues list */}
+                  {issues.length > 0 && (
+                    <div className="px-4 pb-2.5 space-y-1">
+                      {issues.map((iss, i) => (
+                        <div key={i} className={`flex items-start gap-2 text-xs rounded-md px-2.5 py-1.5 ${
+                          iss.sev === 'Fail' ? 'bg-red-50 text-red-800' : 'bg-amber-50 text-amber-800'
+                        }`}>
+                          <span className="font-bold shrink-0 mt-px">{iss.cat}</span>
+                          <span className="text-slate-500 shrink-0">—</span>
+                          <span>{iss.msg}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
       </div>
 
       {/* Status banner */}
