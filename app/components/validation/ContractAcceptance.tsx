@@ -50,7 +50,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
             ))}
           </div>
           <button onClick={onBack}
-            className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+            className="px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1">
             Return to Validation Queue
           </button>
         </div>
@@ -72,7 +72,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
 
   return (
     <div className="p-6 max-w-screen-xl mx-auto">
-      <button onClick={onBack} className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium mb-5">
+      <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 mb-5">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         Back to Validation Detail
       </button>
@@ -150,7 +150,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
                   <div className="text-xs text-slate-400">Signature preview</div>
                 </div>
                 <button onClick={handleSign} disabled={!allChecksOk}
-                  className="w-full py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg transition-colors"
+                  className="w-full px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={!allChecksOk ? 'All validation checks must pass before signing' : ''}>
                   Sign as {ANALYST_NAME}
                 </button>
@@ -172,7 +172,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
 
           {/* Confirm button */}
           <button onClick={handleConfirm} disabled={!canConfirm}
-            className="w-full py-3 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-xl shadow-sm transition-colors"
+            className="w-full px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
             title={!canConfirm ? (countersigned ? 'All checks must pass' : 'Apply countersignature first') : ''}>
             {!countersigned ? 'Apply Countersignature First' : !allChecksOk ? 'Validation Incomplete' : 'Confirm Acceptance'}
           </button>

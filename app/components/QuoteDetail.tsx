@@ -32,7 +32,7 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
   return (
     <div className="p-6 max-w-screen-xl mx-auto">
       {/* Back */}
-      <button onClick={onBack} className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium mb-5">
+      <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 mb-5">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
@@ -61,25 +61,25 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => {}}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
               >
                 Escalate
               </button>
               <button
                 onClick={() => {}}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
               >
                 Delegate
               </button>
               <button
                 onClick={onReject}
-                className="px-4 py-2 text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#ef4444] hover:bg-red-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
               >
                 Reject
               </button>
               <button
                 onClick={onApprove}
-                className="px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
               >
                 Approve
               </button>
@@ -156,7 +156,7 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
             <div className="text-amber-900 font-semibold text-sm">Stale HH Data — {quote.dataAge} days old (threshold: 30 days)</div>
             <div className="text-amber-700 text-xs mt-0.5">HH data may not reflect current consumption patterns. Refresh before proceeding.</div>
           </div>
-          <button className="px-3 py-1.5 text-xs font-semibold text-amber-900 bg-amber-100 border border-amber-300 rounded-lg hover:bg-amber-200 transition-colors shrink-0">
+          <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 shrink-0">
             Refresh HH Data
           </button>
         </div>
@@ -300,7 +300,7 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
                         </div>
                         <button
                           onClick={(e) => { e.stopPropagation(); onExpandSite(siteIdx); }}
-                          className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors whitespace-nowrap"
+                          className="px-3 py-1 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap"
                         >
                           View HH Data →
                         </button>

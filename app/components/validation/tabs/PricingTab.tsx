@@ -238,7 +238,7 @@ function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: Conte
                       ? <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded">Error</span>
                       : <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Warning</span>
                     }
-                    <button className="text-xs text-slate-500 hover:text-slate-700 underline">Escalate to Trading</button>
+                    <button className="text-xs text-[#0ea5e9] hover:text-[#0284c7] underline">Escalate to Trading</button>
                   </div>
                 </div>
               );
@@ -258,11 +258,11 @@ function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: Conte
       <div className="flex items-center justify-between pt-1">
         <div className="flex gap-2">
           <button onClick={handleReset} disabled={verified}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
             Reset to original values
           </button>
           <button onClick={() => setShowSaveModal(true)} disabled={verified}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
             Save changes
           </button>
         </div>
@@ -273,7 +273,7 @@ function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: Conte
           </span>
         ) : (
           <button onClick={onMarkVerified}
-            className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg">
+            className="px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1">
             {mpanLabel ? `Mark MPAN ${mpanLabel} as Verified` : 'Mark as Verified'}
           </button>
         )}
@@ -290,9 +290,9 @@ function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: Conte
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4" />
             <div className="flex justify-end gap-3">
               <button onClick={() => setShowSaveModal(false)}
-                className="px-4 py-2 text-sm text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">Cancel</button>
               <button onClick={() => { setShowSaveModal(false); setSaveReason(''); }}
-                className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg">Save & Log</button>
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1">Save & Log</button>
             </div>
           </div>
         </div>

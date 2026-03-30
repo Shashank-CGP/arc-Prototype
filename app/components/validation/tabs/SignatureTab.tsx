@@ -79,7 +79,7 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
             </div>
             {verifyResult === 'none' && (
               <button onClick={handleVerify} disabled={verifying}
-                className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-60 flex items-center gap-2">
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                 {verifying && (
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -152,16 +152,16 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
                   </div>
                   <div className="flex gap-2 pt-4">
                     <button onClick={() => setActionTaken('info')}
-                      className="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
                       Request Info
                     </button>
                     <button onClick={() => setActionTaken('rejected')}
-                      className="px-3 py-2 text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100">
+                      className="px-4 py-2 text-sm font-semibold text-white bg-[#ef4444] hover:bg-red-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1">
                       Reject
                     </button>
                     <button onClick={() => { setActionTaken('accepted'); onVerified(); }}
                       disabled={verifyResult !== 'match'}
-                      className="px-3 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg"
+                      className="px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
                       title={verifyResult !== 'match' ? 'Verify signatory first' : ''}>
                       Accept
                     </button>
@@ -188,7 +188,7 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
                   <div className="text-sm font-semibold text-slate-800">Contract PDF</div>
                   <div className="text-xs text-slate-500 mt-0.5">{contract.ref}_signed.pdf</div>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100">
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                   Download PDF
                 </button>

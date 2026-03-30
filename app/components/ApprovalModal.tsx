@@ -149,7 +149,7 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
                 {!showCustomInput ? (
                   <button
                     onClick={() => setShowCustomInput(true)}
-                    className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium mt-1"
+                    className="flex items-center gap-1.5 text-sm text-[#0ea5e9] hover:text-[#0284c7] font-medium mt-1"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -195,18 +195,18 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={!canConfirm}
-            className={`px-5 py-2 text-sm font-semibold text-white rounded-lg transition-colors ${
+            className={`px-4 py-2 text-sm font-semibold text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
               isApprove
-                ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-300'
-                : 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
-            } disabled:cursor-not-allowed`}
+                ? 'bg-[#22c55e] hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1'
+                : 'bg-[#ef4444] hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1'
+            }`}
           >
             {isApprove ? 'Confirm Approval' : 'Confirm Rejection'}
           </button>

@@ -122,7 +122,7 @@ export function AQApprovalTab({ contract, confirmed, onConfirm }: Props) {
                 Arc does not manage the Trading approval process. Raise the request externally and confirm below once approved.
               </p>
               <button onClick={onConfirm}
-                className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors shrink-0">
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1 shrink-0">
                 Demo: Confirm AQ Approval ↗
               </button>
             </div>

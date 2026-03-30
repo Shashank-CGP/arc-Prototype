@@ -79,7 +79,7 @@ export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading 
           </div>
           {!referralLogged ? (
             <button onClick={handleRefer}
-              className="px-3 py-2 text-sm font-semibold text-amber-900 bg-amber-100 border border-amber-300 rounded-lg hover:bg-amber-200 transition-colors shrink-0">
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 shrink-0">
               Refer to Trading
             </button>
           ) : (
@@ -169,7 +169,7 @@ export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading 
           </span>
         ) : (
           <button onClick={onMarkVerified} disabled={isMismatch && !referralLogged}
-            className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg transition-colors"
+            className="px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
             title={isMismatch && !referralLogged ? 'Refer to Trading before verifying' : ''}>
             Mark as Verified
           </button>
