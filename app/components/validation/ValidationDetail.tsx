@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { Contract, ValidationResult, CreditStatus } from '../../data/validationData';
+import { useState, Fragment } from 'react';
+import { Contract, ValidationResult, CreditStatus, AQ_APPROVAL_THRESHOLD } from '../../data/validationData';
 import { DataTab, getMpanDataStatus } from './tabs/DataTab';
 import { PricingTab, getMpanPricingStatus } from './tabs/PricingTab';
 import { QuoteTab, getMpanQuoteStatus } from './tabs/QuoteTab';
@@ -54,8 +54,14 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
   const [creditStatus, setCreditStatus] = useState<CreditStatus>(contract.creditApprovalStatus);
   const [mpansOpen, setMpansOpen] = useState(false);
 
-  // AQ Approval is the final gate — all checks must be done AND aq approved
-  const allVerified = Object.values(tabVerified).every(Boolean);
+  // Whether this contract requires Trading team AQ approval
+  const needsAqApproval = contract.aq >= AQ_APPROVAL_THRESHOLD;
+
+  // Contract Services checks complete (everything except aqApproval)
+  const servicesComplete = tabVerified.data && tabVerified.pricing && tabVerified.quote && tabVerified.signature;
+
+  // Final gate: auto-bypass Trading if below threshold, otherwise must be confirmed
+  const allVerified = servicesComplete && (!needsAqApproval || tabVerified.aqApproval);
 
   const markVerified = (tab: string) => setTabVerified(p => ({ ...p, [tab]: true }));
 
@@ -185,7 +191,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             </button>
             <button onClick={onProceedToAcceptance} disabled={!allVerified}
               className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
-              title={!allVerified ? (!tabVerified.aqApproval ? 'AQ Approval must be confirmed by the Trading team before proceeding' : 'All validation checks must be complete') : ''}>
+              title={!allVerified ? (needsAqApproval && !tabVerified.aqApproval ? 'AQ Approval must be confirmed by the Trading team before proceeding' : 'All validation checks must be complete') : ''}>
               Proceed to Data Sheet →
             </button>
           </div>
@@ -237,73 +243,83 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
         {/* MPAN accordion panel */}
         {mpanCount > 1 && mpansOpen && (
           <div className="mt-3 rounded-lg border border-slate-200 overflow-hidden">
-            {/* Header row */}
-            <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] gap-x-4 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              <span>MPAN</span>
-              <span>Site Ref</span>
-              <span className="text-right">AQ (kWh)</span>
-              <span className="text-center">Data</span>
-              <span className="text-center">Pricing</span>
-              <span className="text-center">Quote</span>
-              <span></span>
-            </div>
-            {contract.mpans!.map((site, idx) => {
-              const dSt  = getMpanDataStatus(site);
-              const pSt  = getMpanPricingStatus(site);
-              const qSt  = getMpanQuoteStatus(site);
-              const worst = [dSt, pSt, qSt].includes('Fail') ? 'Fail' : [dSt, pSt, qSt].includes('Warning') ? 'Warning' : 'Pass';
-              const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="text-left px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-wide">MPAN</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-wide">Site Ref</th>
+                  <th className="text-right px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-wide">AQ (kWh)</th>
+                  <th className="text-center px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-wide w-16">Data</th>
+                  <th className="text-center px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-wide w-16">Pricing</th>
+                  <th className="text-center px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-wide w-16">Quote</th>
+                  <th className="text-center px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-wide w-20">Overall</th>
+                </tr>
+              </thead>
+              <tbody>
+                {contract.mpans!.map((site, idx) => {
+                  const dSt   = getMpanDataStatus(site);
+                  const pSt   = getMpanPricingStatus(site);
+                  const qSt   = getMpanQuoteStatus(site);
+                  const worst = [dSt, pSt, qSt].includes('Fail') ? 'Fail' : [dSt, pSt, qSt].includes('Warning') ? 'Warning' : 'Pass';
+                  const rowBg = idx % 2 === 0 ? '' : 'bg-slate-50/60';
 
-              const StatusCell = ({ st }: { st: ValidationResult }) => {
-                if (st === 'Pass')    return <span className="inline-flex justify-center"><svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></span>;
-                if (st === 'Fail')    return <span className="inline-flex justify-center"><svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></span>;
-                if (st === 'Warning') return <span className="inline-flex justify-center"><svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></span>;
-                return <span className="inline-flex justify-center w-2 h-2 rounded-full bg-slate-300 mt-1 mx-auto block" />;
-              };
+                  const StatusCell = ({ st }: { st: ValidationResult }) => {
+                    if (st === 'Pass')    return <td className="px-4 py-2.5 text-center"><svg className="w-4 h-4 text-green-500 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></td>;
+                    if (st === 'Fail')    return <td className="px-4 py-2.5 text-center"><svg className="w-4 h-4 text-red-500 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></td>;
+                    if (st === 'Warning') return <td className="px-4 py-2.5 text-center"><svg className="w-4 h-4 text-amber-500 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></td>;
+                    return <td className="px-4 py-2.5 text-center"><span className="inline-block w-2 h-2 rounded-full bg-slate-300" /></td>;
+                  };
 
-              // Collect error/warning messages for this MPAN
-              const issues: { cat: string; msg: string; sev: 'Fail' | 'Warning' }[] = [];
-              site.dataChecks.filter(c => c.status !== 'Pass').forEach(c =>
-                issues.push({ cat: 'Data', msg: `${c.name}: expected ${c.expected}, got ${c.actual}`, sev: c.status as 'Fail' | 'Warning' }));
-              site.ampIndicators.forEach(a =>
-                issues.push({ cat: 'Data', msg: a.detail, sev: a.severity === 'red' ? 'Fail' : 'Warning' }));
-              [...site.pricingRows, ...site.standingRows].filter(r => r.anomalyRange && (r.value < r.anomalyRange.min || r.value > r.anomalyRange.max)).forEach(r =>
-                issues.push({ cat: 'Pricing', msg: `${r.name}: ${r.value} outside range ${r.anomalyRange!.min}–${r.anomalyRange!.max}`, sev: 'Warning' }));
-              if (site.curveName !== site.currentCurveName)
-                issues.push({ cat: 'Quote', msg: `Curve locked to superseded ${site.curveName} (current: ${site.currentCurveName})`, sev: 'Fail' });
+                  // Collect issues
+                  const issues: { cat: string; msg: string; sev: 'Fail' | 'Warning' }[] = [];
+                  site.dataChecks.filter(c => c.status !== 'Pass').forEach(c =>
+                    issues.push({ cat: 'Data', msg: `${c.name}: expected "${c.expected}", got "${c.actual}"`, sev: c.status as 'Fail' | 'Warning' }));
+                  site.ampIndicators.forEach(a =>
+                    issues.push({ cat: 'Data', msg: a.detail, sev: a.severity === 'red' ? 'Fail' : 'Warning' }));
+                  [...site.pricingRows, ...site.standingRows].filter(r => r.anomalyRange && (r.value < r.anomalyRange.min || r.value > r.anomalyRange.max)).forEach(r =>
+                    issues.push({ cat: 'Pricing', msg: `${r.name}: ${r.value} outside range ${r.anomalyRange!.min}–${r.anomalyRange!.max}`, sev: 'Warning' }));
+                  if (site.curveName !== site.currentCurveName)
+                    issues.push({ cat: 'Quote', msg: `Curve locked to superseded ${site.curveName} (current: ${site.currentCurveName})`, sev: 'Fail' });
 
-              return (
-                <div key={site.mpan} className={`${rowBg} border-b border-slate-100 last:border-0`}>
-                  <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] gap-x-4 items-center px-4 py-2.5">
-                    <span className="font-mono text-xs font-semibold text-slate-800">{site.mpan}</span>
-                    <span className="text-xs text-slate-600">{site.siteRef}</span>
-                    <span className="text-xs text-slate-700 font-medium text-right tabular-nums">{site.aq.toLocaleString()}</span>
-                    <StatusCell st={dSt} />
-                    <StatusCell st={pSt} />
-                    <StatusCell st={qSt} />
-                    <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ring-1 ${
-                      worst === 'Fail'    ? 'bg-red-50 text-red-700 ring-red-200' :
-                      worst === 'Warning' ? 'bg-amber-50 text-amber-700 ring-amber-200' :
-                      'bg-green-50 text-green-700 ring-green-200'
-                    }`}>{worst}</span>
-                  </div>
-                  {/* Inline issues list */}
-                  {issues.length > 0 && (
-                    <div className="px-4 pb-2.5 space-y-1">
-                      {issues.map((iss, i) => (
-                        <div key={i} className={`flex items-start gap-2 text-xs rounded-md px-2.5 py-1.5 ${
-                          iss.sev === 'Fail' ? 'bg-red-50 text-red-800' : 'bg-amber-50 text-amber-800'
-                        }`}>
-                          <span className="font-bold shrink-0 mt-px">{iss.cat}</span>
-                          <span className="text-slate-500 shrink-0">—</span>
-                          <span>{iss.msg}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                  return (
+                    <Fragment key={site.mpan}>
+                      <tr className={`${rowBg} border-b border-slate-100`}>
+                        <td className="px-4 py-2.5 font-mono font-semibold text-slate-800 whitespace-nowrap">{site.mpan}</td>
+                        <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{site.siteRef}</td>
+                        <td className="px-4 py-2.5 text-slate-700 font-medium text-right tabular-nums whitespace-nowrap">{site.aq.toLocaleString()}</td>
+                        <StatusCell st={dSt} />
+                        <StatusCell st={pSt} />
+                        <StatusCell st={qSt} />
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ring-1 ${
+                            worst === 'Fail'    ? 'bg-red-50 text-red-700 ring-red-200' :
+                            worst === 'Warning' ? 'bg-amber-50 text-amber-700 ring-amber-200' :
+                            'bg-green-50 text-green-700 ring-green-200'
+                          }`}>{worst}</span>
+                        </td>
+                      </tr>
+                      {issues.length > 0 && (
+                        <tr className={rowBg}>
+                          <td colSpan={7} className="px-4 pb-3 pt-0">
+                            <div className="space-y-1">
+                              {issues.map((iss, i) => (
+                                <div key={i} className={`flex items-start gap-2 text-xs rounded-md px-2.5 py-1.5 ${
+                                  iss.sev === 'Fail' ? 'bg-red-50 text-red-800' : 'bg-amber-50 text-amber-800'
+                                }`}>
+                                  <span className="font-bold shrink-0">{iss.cat}</span>
+                                  <span className="text-slate-400 shrink-0">—</span>
+                                  <span>{iss.msg}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
 

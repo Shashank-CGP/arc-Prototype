@@ -4,6 +4,15 @@ export type ValidationResult = 'Pass' | 'Fail' | 'Warning' | 'Pending';
 export type TabId = 'overview' | 'data' | 'pricing' | 'quote' | 'signature' | 'aq-approval';
 export type CreditStatus = 'N/A' | 'Pending' | 'Approved' | 'Rejected';
 
+/**
+ * AQ Approval threshold (kWh).
+ * Contracts whose total AQ is BELOW this value skip the Trading gate and
+ * auto-advance to the Data Sheet once Contract Services have completed all
+ * their checks. Contracts at or above this value require explicit Trading
+ * team approval on the AQ Approval tab.
+ */
+export const AQ_APPROVAL_THRESHOLD = 300_000;
+
 export interface ValidationCheck {
   status: ValidationResult;
   message: string;

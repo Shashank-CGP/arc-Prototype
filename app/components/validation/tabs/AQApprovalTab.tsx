@@ -1,5 +1,5 @@
 'use client';
-import { Contract } from '../../../data/validationData';
+import { Contract, AQ_APPROVAL_THRESHOLD } from '../../../data/validationData';
 
 interface Props {
   contract: Contract;
@@ -8,8 +8,44 @@ interface Props {
 }
 
 export function AQApprovalTab({ contract, confirmed, onConfirm }: Props) {
+  const needsApproval = contract.aq >= AQ_APPROVAL_THRESHOLD;
+
+  // Below threshold — auto-bypass panel
+  if (!needsApproval) {
+    return (
+      <div className="space-y-5">
+        <div className="flex items-start gap-3 px-5 py-4 rounded-xl bg-green-50 border border-green-200">
+          <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <div className="text-green-900 font-semibold text-sm">AQ Approval Not Required</div>
+            <div className="text-green-700 text-xs mt-0.5">
+              This contract&apos;s AQ of <span className="font-bold">{contract.aq.toLocaleString()} kWh</span> is below
+              the approval threshold of <span className="font-bold">{AQ_APPROVAL_THRESHOLD.toLocaleString()} kWh</span>.
+              It will automatically advance to the Data Sheet once Contract Services complete all their checks.
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-5 text-xs text-slate-500 space-y-1">
+          <p><span className="font-semibold text-slate-700">Threshold:</span> {AQ_APPROVAL_THRESHOLD.toLocaleString()} kWh</p>
+          <p><span className="font-semibold text-slate-700">This contract&apos;s AQ:</span> {contract.aq.toLocaleString()} kWh</p>
+          <p className="text-green-600 font-medium">✓ Below threshold — Trading gate bypassed automatically</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
+      {/* AQ threshold context */}
+      <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+        <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        AQ <span className="font-bold text-slate-800 mx-1">{contract.aq.toLocaleString()} kWh</span> ≥ threshold
+        <span className="font-bold text-slate-800 mx-1">{AQ_APPROVAL_THRESHOLD.toLocaleString()} kWh</span> — Trading approval required before this contract can progress.
+      </div>
       {/* Owner banner */}
       <div className="flex items-start gap-3 px-5 py-4 rounded-xl bg-blue-50 border border-blue-200">
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
