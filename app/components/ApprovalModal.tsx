@@ -48,12 +48,12 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onCancel} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         {/* Header */}
         <div className={`px-6 py-4 border-b ${isApprove ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isApprove ? 'bg-green-600' : 'bg-red-600'}`}>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isApprove ? 'bg-green-500' : 'bg-red-500'}`}>
                 {isApprove ? (
                   <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -83,7 +83,7 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
 
         <div className="px-6 py-5 space-y-5">
           {/* Quote summary */}
-          <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+          <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Quote Summary</div>
             <div className="grid grid-cols-2 gap-2.5 text-sm">
               <div>
@@ -126,7 +126,7 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
                       onClick={() => toggleReason(reason)}
                       className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
                         selectedReasons.includes(reason)
-                          ? 'bg-red-600 border-red-600'
+                          ? 'bg-red-500 border-red-500'
                           : 'border-slate-300 group-hover:border-red-400'
                       }`}
                     >
@@ -149,7 +149,7 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
                 {!showCustomInput ? (
                   <button
                     onClick={() => setShowCustomInput(true)}
-                    className="flex items-center gap-1.5 text-sm text-[#0ea5e9] hover:text-[#0284c7] font-medium mt-1"
+                    className="flex items-center gap-1.5 text-sm text-sky-500 hover:text-sky-600 font-medium mt-1"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -163,7 +163,7 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
                       value={customReason}
                       onChange={(e) => setCustomReason(e.target.value)}
                       placeholder="Enter custom failure reason…"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                       autoFocus
                     />
                   </div>
@@ -186,7 +186,7 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
                   ? 'Add any notes for the pricing team…'
                   : 'Provide additional context for the Account Manager…'
               }
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
             />
           </div>
         </div>
@@ -204,8 +204,8 @@ export function ApprovalModal({ quote, mode, onConfirm, onCancel }: Props) {
             disabled={!canConfirm}
             className={`px-4 py-2 text-sm font-semibold text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
               isApprove
-                ? 'bg-[#22c55e] hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1'
-                : 'bg-[#ef4444] hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1'
+                ? 'bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1'
+                : 'bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1'
             }`}
           >
             {isApprove ? 'Confirm Approval' : 'Confirm Rejection'}

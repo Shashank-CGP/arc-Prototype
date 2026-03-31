@@ -78,8 +78,8 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
   return (
     <div className="space-y-5">
       {/* Data integrity checks */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
             Data Integrity Checks{mpanLabel && <span className="ml-2 font-mono text-slate-500 normal-case font-normal text-xs">— {mpanLabel}</span>}
           </h2>
@@ -90,11 +90,11 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Check</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Expected</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actual</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-              <th className="px-5 py-3 w-20" />
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Check</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Expected</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Actual</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Status</th>
+              <th className="px-4 py-3 w-20" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -103,13 +103,13 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
               const isEditing  = editingId === check.id;
               const isAmended  = check.id in amendments;
               const canEdit    = check.status !== 'Pass' && !isEditing;
-              const rowHighlight = effStatus !== 'Pass' ? 'bg-amber-50/60' : isAmended ? 'bg-blue-50/40' : '';
+              const rowHighlight = effStatus !== 'Pass' ? 'bg-amber-50/60' : isAmended ? 'bg-sky-50/40' : '';
 
               return (
-                <tr key={check.id} className={rowHighlight}>
-                  <td className="px-5 py-3 font-medium text-slate-700">{check.name}</td>
-                  <td className="px-5 py-3 font-mono text-xs text-slate-500">{check.expected}</td>
-                  <td className="px-5 py-3 font-mono text-xs">
+                <tr key={check.id} className={`border-b border-slate-100 hover:bg-slate-50 ${rowHighlight}`}>
+                  <td className="px-4 py-3 font-medium text-slate-700">{check.name}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate-500">{check.expected}</td>
+                  <td className="px-4 py-3 font-mono text-xs">
                     {isEditing ? (
                       <div className="flex items-center gap-2">
                         <input
@@ -117,10 +117,10 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
                           value={draftValue}
                           onChange={e => setDraftValue(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') saveEdit(check); if (e.key === 'Escape') cancelEdit(); }}
-                          className="border border-blue-400 rounded px-2 py-1 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-300 w-40"
+                          className="border border-sky-400 rounded px-2 py-1 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-300 w-40"
                         />
                         <button onClick={() => saveEdit(check)}
-                          className="px-3 py-1 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]">
+                          className="px-3 py-1 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-md shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500">
                           Save
                         </button>
                         <button onClick={cancelEdit}
@@ -130,19 +130,19 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
                       </div>
                     ) : (
                       <span className={
-                        effStatus === 'Pass' && isAmended ? 'text-blue-700 font-semibold' :
+                        effStatus === 'Pass' && isAmended ? 'text-sky-600 font-semibold' :
                         effStatus === 'Fail' ? 'text-red-700 font-semibold' :
                         effStatus === 'Warning' ? 'text-amber-700 font-semibold' :
                         'text-slate-700'
                       }>
                         {amendments[check.id] ?? check.actual}
-                        {isAmended && <span className="ml-1.5 text-[10px] font-sans font-bold text-blue-500 uppercase">amended</span>}
+                        {isAmended && <span className="ml-1.5 text-[10px] font-sans font-bold text-sky-500 uppercase">amended</span>}
                       </span>
                     )}
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-4 py-3">
                     {isAmended ? (
-                      <span className="inline-flex items-center gap-1 text-blue-700 font-semibold text-xs bg-blue-50 px-2 py-0.5 rounded-full ring-1 ring-blue-200">
+                      <span className="inline-flex items-center gap-1 text-sky-600 font-semibold text-xs bg-sky-50 px-2 py-0.5 rounded-full ring-1 ring-sky-200">
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                         Approved
                       </span>
@@ -150,11 +150,11 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
                       <ResultBadge status={effStatus} />
                     )}
                   </td>
-                  <td className="px-5 py-3 text-right">
+                  <td className="px-4 py-3 text-right">
                     {canEdit && (
                       <button onClick={() => startEdit(check)}
                         title="Edit and approve this value"
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors">
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
@@ -164,7 +164,7 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
                     {isAmended && !isEditing && (
                       <button onClick={() => startEdit(check)}
                         title="Re-edit this value"
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors">
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
@@ -180,8 +180,8 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
       </div>
 
       {/* AMP indicators */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">AMP Indicators</h2>
           {!hasAmps && (
             <span className="text-xs text-green-700 font-semibold flex items-center gap-1">
@@ -221,7 +221,7 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
           </span>
         ) : (
           <button onClick={onMarkReviewed}
-            className="px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1">
+            className="px-4 py-2 text-sm font-semibold text-white bg-green-500 hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1">
             {mpanLabel ? `Mark MPAN ${mpanLabel} as Reviewed` : 'Mark as Reviewed'}
           </button>
         )}

@@ -48,7 +48,7 @@ export function MpanSummaryBar({ sites, getStatus, verifiedSet }: SummaryBarProp
   const allDone  = verified === sites.length;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-3">
+    <div className="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-3">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Left: headline */}
         <div className="flex items-center gap-2">

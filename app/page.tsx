@@ -117,7 +117,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-[#f8fafc]">
       <Sidebar
         currentScreen={screen.type}
         onNavigate={(dest) => {
@@ -204,7 +204,7 @@ export default function Home() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl text-sm font-medium text-white min-w-64 ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl text-sm font-medium text-white min-w-64 ${
               toast.kind === 'success'
                 ? 'bg-green-700'
                 : toast.kind === 'error'

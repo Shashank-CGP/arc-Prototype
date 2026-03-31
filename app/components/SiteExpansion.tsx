@@ -26,7 +26,7 @@ export function SiteExpansion({ site, onBack }: Props) {
       </button>
 
       {/* Site header */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-5">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 mb-5">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -72,8 +72,8 @@ export function SiteExpansion({ site, onBack }: Props) {
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
               activeTab === tab
-                ? 'border-blue-600 text-blue-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                ? 'border-b-2 border-sky-500 text-sky-600 font-medium'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             {tab === 'summary' ? 'Site Summary' : 'Half-Hourly Data'}
@@ -84,7 +84,7 @@ export function SiteExpansion({ site, onBack }: Props) {
       {activeTab === 'summary' && (
         <div className="grid grid-cols-2 gap-5">
           {/* Meter details */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wide">Meter Details</h3>
             <dl className="space-y-2.5">
               {[
@@ -102,7 +102,7 @@ export function SiteExpansion({ site, onBack }: Props) {
           </div>
 
           {/* Consumption summary */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wide">Consumption Summary</h3>
             <dl className="space-y-2.5">
               {[
@@ -120,24 +120,24 @@ export function SiteExpansion({ site, onBack }: Props) {
           </div>
 
           {/* Tolerance checks */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 col-span-2">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 col-span-2">
             <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wide">Tolerance Checks — Site Level</h3>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="text-left pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Rule</th>
-                  <th className="text-left pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Threshold</th>
-                  <th className="text-left pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actual</th>
-                  <th className="text-left pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Result</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Rule</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Threshold</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Actual</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Result</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {site.toleranceResults.map((r) => (
                   <tr key={r.rule} className={r.result === 'Fail' ? 'bg-red-50' : ''}>
-                    <td className="py-2.5 font-medium text-slate-700">{r.rule}</td>
-                    <td className="py-2.5 font-mono text-xs text-slate-600">{r.threshold}</td>
-                    <td className={`py-2.5 font-mono text-xs font-semibold ${r.result === 'Fail' ? 'text-red-700' : 'text-slate-700'}`}>{r.actual}</td>
-                    <td className="py-2.5">
+                    <td className="px-4 py-3 font-medium text-slate-700">{r.rule}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{r.threshold}</td>
+                    <td className={`px-4 py-3 font-mono text-xs font-semibold ${r.result === 'Fail' ? 'text-red-700' : 'text-slate-700'}`}>{r.actual}</td>
+                    <td className="px-4 py-3">
                       {r.result === 'Pass' ? (
                         <span className="inline-flex items-center gap-1 text-green-700 font-semibold text-xs">
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -161,7 +161,7 @@ export function SiteExpansion({ site, onBack }: Props) {
       {activeTab === 'hh' && (
         <div className="space-y-5">
           {/* Day selector */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Select Day</h3>
               <span className="text-xs text-slate-500">{site.hhData.length} days available</span>
@@ -175,8 +175,8 @@ export function SiteExpansion({ site, onBack }: Props) {
                     onClick={() => setSelectedDayIndex(idx)}
                     className={`flex flex-col items-center px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
                       selectedDayIndex === idx
-                        ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-blue-300'
+                        ? 'bg-sky-500 border-sky-500 text-white'
+                        : 'bg-white border-slate-200 text-slate-700 hover:border-sky-300'
                     }`}
                   >
                     <span>{day.date}</span>
@@ -192,12 +192,12 @@ export function SiteExpansion({ site, onBack }: Props) {
           </div>
 
           {/* Chart */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <HHChart intervals={selectedDay.intervals} date={selectedDay.date} />
           </div>
 
           {/* Data quality summary */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wide">Data Quality — {selectedDay.date}</h3>
             <div className="grid grid-cols-3 gap-4">
               {[
@@ -206,7 +206,7 @@ export function SiteExpansion({ site, onBack }: Props) {
                 { label: 'Missing Intervals', value: selectedDay.intervals.filter((iv) => iv.missing).length, color: 'text-red-700' },
               ].map((item) => (
                 <div key={item.label} className="bg-slate-50 rounded-lg p-3">
-                  <div className={`text-2xl font-bold ${item.color ?? 'text-slate-900'}`}>{item.value}</div>
+                  <div className={`text-xl font-semibold ${item.color ?? 'text-slate-900'}`}>{item.value}</div>
                   <div className="text-xs text-slate-500 mt-0.5">{item.label}</div>
                 </div>
               ))}

@@ -11,7 +11,7 @@ const actionStyles: Record<string, { icon: string; color: string; bg: string; bo
   'Auto-Approved': { icon: '✓', color: 'text-green-700', bg: 'bg-green-100', border: 'border-green-300' },
   'Manually Approved': { icon: '✓', color: 'text-green-700', bg: 'bg-green-100', border: 'border-green-300' },
   'Rejected': { icon: '✕', color: 'text-red-700', bg: 'bg-red-100', border: 'border-red-300' },
-  'HH Data Refreshed': { icon: '↻', color: 'text-blue-700', bg: 'bg-blue-100', border: 'border-blue-300' },
+  'HH Data Refreshed': { icon: '↻', color: 'text-sky-700', bg: 'bg-sky-100', border: 'border-sky-200' },
   'Submitted for Review': { icon: '⚑', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' },
   'Escalated': { icon: '↑', color: 'text-purple-700', bg: 'bg-purple-100', border: 'border-purple-300' },
 };
@@ -70,7 +70,7 @@ export function AuditTrail({ events, quoteRef }: Props) {
                   {style.icon}
                 </div>
 
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
                   <div
                     className={`flex items-start justify-between p-4 ${hasSnapshot ? 'cursor-pointer hover:bg-slate-50' : ''}`}
                     onClick={() => hasSnapshot && toggle(event.id)}

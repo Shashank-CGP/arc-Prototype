@@ -41,7 +41,7 @@ export function QuoteQueue({ quotes, onSelectQuote }: Props) {
       {/* Page header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Curve Approval Queue</h1>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Curve Approval Queue</h1>
           <p className="text-sm text-slate-500 mt-1">HH quotes awaiting curve approval — Power only</p>
         </div>
         <div className="flex items-center gap-3">
@@ -83,8 +83,8 @@ export function QuoteQueue({ quotes, onSelectQuote }: Props) {
           { label: 'Rejected', value: quotes.filter(q => q.status === 'Rejected').length, color: 'text-red-700' },
           { label: 'Stale Data', value: staleCount, color: 'text-amber-700' },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm">
-            <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+          <div key={stat.label} className="bg-white rounded-lg border border-slate-200 px-4 py-3 shadow-sm">
+            <div className={`text-xl font-semibold ${stat.color}`}>{stat.value}</div>
             <div className="text-xs text-slate-500 mt-0.5">{stat.label}</div>
           </div>
         ))}
@@ -96,7 +96,7 @@ export function QuoteQueue({ quotes, onSelectQuote }: Props) {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as QuoteType | 'All')}
-          className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500"
         >
           <option value="All">All Quote Types</option>
           {allTypes.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -104,7 +104,7 @@ export function QuoteQueue({ quotes, onSelectQuote }: Props) {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as QuoteStatus | 'All')}
-          className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500"
         >
           <option value="All">All Statuses</option>
           {allStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -113,17 +113,17 @@ export function QuoteQueue({ quotes, onSelectQuote }: Props) {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Quote / Customer</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Account Manager</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Quote Type</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">EAC (kWh)</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">HH Sites</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Data Age</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Quote / Customer</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Account Manager</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Quote Type</th>
+              <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">EAC (kWh)</th>
+              <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">HH Sites</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Data Age</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -131,10 +131,10 @@ export function QuoteQueue({ quotes, onSelectQuote }: Props) {
               <tr
                 key={quote.id}
                 onClick={() => onSelectQuote(quote.id)}
-                className="hover:bg-blue-50 cursor-pointer transition-colors group"
+                className="hover:bg-slate-50 cursor-pointer transition-colors group border-b border-slate-100"
               >
                 <td className="px-4 py-3.5">
-                  <div className="font-mono text-sm font-semibold text-blue-700 group-hover:text-blue-800 leading-none">{quote.ref}</div>
+                  <div className="font-mono text-sm font-semibold text-sky-600 group-hover:text-sky-700 leading-none">{quote.ref}</div>
                   <div className="text-xs font-medium text-slate-600 mt-1 tracking-wide">{quote.customer}</div>
                 </td>
                 <td className="px-4 py-3.5 text-slate-600">{quote.accountManager}</td>

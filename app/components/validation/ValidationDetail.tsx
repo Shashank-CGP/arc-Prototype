@@ -156,19 +156,19 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
       </button>
 
       {/* Contract header */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-4">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 mb-4">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-xl font-bold font-mono text-slate-900">{contract.ref}</h1>
-              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${contract.contractType === 'New Business' ? 'bg-blue-100 text-blue-800 ring-1 ring-blue-300' : 'bg-indigo-100 text-indigo-800 ring-1 ring-indigo-300'}`}>
+              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${contract.contractType === 'New Business' ? 'bg-sky-100 text-sky-800 ring-1 ring-sky-300' : 'bg-indigo-100 text-indigo-800 ring-1 ring-indigo-300'}`}>
                 {contract.contractType}
               </span>
-              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                contract.status === 'Auto-Approved' ? 'bg-green-100 text-green-800 ring-1 ring-green-300' :
-                contract.status === 'Manual Review' ? 'bg-amber-100 text-amber-800 ring-1 ring-amber-300' :
-                contract.status === 'Accepted'       ? 'bg-blue-100 text-blue-800 ring-1 ring-blue-300' :
-                'bg-red-100 text-red-800 ring-1 ring-red-300'}`}>
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${
+                contract.status === 'Auto-Approved' ? 'bg-green-100 text-green-700 border-green-200' :
+                contract.status === 'Manual Review' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                contract.status === 'Accepted'       ? 'bg-sky-100 text-sky-700 border-sky-200' :
+                'bg-red-100 text-red-700 border-red-200'}`}>
                 {contract.status}
               </span>
             </div>
@@ -190,7 +190,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
               Download PDF
             </button>
             <button onClick={onProceedToAcceptance} disabled={!allVerified}
-              className="px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
               title={!allVerified ? (needsAqApproval && !tabVerified.aqApproval ? 'AQ Approval must be confirmed by the Trading team before proceeding' : 'All validation checks must be complete') : ''}>
               Proceed to Data Sheet →
             </button>
@@ -208,8 +208,8 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             <div className="text-xs text-slate-500 font-medium mb-0.5">MPAN</div>
             {mpanCount > 1 ? (
               <button onClick={() => setMpansOpen(o => !o)}
-                className="flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors">
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-800 text-xs font-bold ring-1 ring-blue-200">
+                className="flex items-center gap-1.5 text-sm font-semibold text-sky-600 hover:text-sky-800 transition-colors">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-sky-100 text-sky-800 text-xs font-bold ring-1 ring-sky-200">
                   {mpanCount} MPANs
                 </span>
                 <svg className={`w-3.5 h-3.5 transition-transform ${mpansOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -327,8 +327,8 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
 
       {/* Status banner */}
       {contract.status === 'Auto-Approved' ? (
-        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-xl bg-green-50 border border-green-200">
-          <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-lg bg-green-50 border border-green-200">
+          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
           </div>
           <div>
@@ -337,7 +337,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
           </div>
         </div>
       ) : contract.status === 'Manual Review' ? (
-        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-xl bg-amber-50 border border-amber-200">
+        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-lg bg-amber-50 border border-amber-200">
           <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
           </div>
@@ -358,11 +358,11 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex items-center px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors -mb-px ${
-                activeTab === tab.id ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                activeTab === tab.id ? 'border-sky-500 text-sky-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               } ${isAQApproval && !tabVerified.aqApproval ? 'font-semibold' : ''}`}>
               {tab.label}
               {isAQApproval && !tabVerified.aqApproval && (
-                <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">
+                <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-700">
                   Final gate
                 </span>
               )}
@@ -376,25 +376,25 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
       {activeTab === 'overview' && (
         <div className="grid grid-cols-2 gap-5">
           {/* Left: checklist */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Validation Checklist</h2>
             <div className="space-y-1">
               {checklistItems.map((item, i) => {
                 const isLast = i === checklistItems.length - 1;
                 return (
                   <button key={item.key} onClick={() => setActiveTab(item.tab)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors group text-left ${isLast ? 'mt-2 border border-dashed border-blue-200 bg-blue-50/40 hover:bg-blue-50' : ''}`}>
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors group text-left ${isLast ? 'mt-2 border border-dashed border-sky-200 bg-sky-50/40 hover:bg-sky-50' : ''}`}>
                     <ResultIcon status={item.status} size="lg" />
                     <div className="flex-1 min-w-0">
-                      <div className={`text-sm font-semibold ${isLast ? 'text-blue-800' : 'text-slate-800'} group-hover:text-blue-700`}>
+                      <div className={`text-sm font-semibold ${isLast ? 'text-sky-800' : 'text-slate-800'} group-hover:text-sky-700`}>
                         {item.label}
                         {isLast && (
-                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Final gate</span>
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-700">Final gate</span>
                         )}
                       </div>
                       <div className="text-xs text-slate-500 truncate">{item.message}</div>
                     </div>
-                    <svg className="w-4 h-4 text-slate-300 group-hover:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-4 h-4 text-slate-300 group-hover:text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -454,7 +454,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
                           Awaiting Credit team
                         </span>
                         <button onClick={handleSimulateApproval}
-                          className="px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1">
+                          className="px-4 py-2 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1">
                           Demo: Approve ↗
                         </button>
                       </div>
@@ -467,7 +467,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
 
           {/* Right: contract summary + progress */}
           <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Contract Summary</h2>
               <dl className="space-y-2.5 text-sm">
                 {[
@@ -489,7 +489,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             </div>
 
             {/* Review progress */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3">Review Progress</h2>
               {[
                 { key: 'data',       label: mpanCount > 1 ? `Data (${mpanCount} MPANs)` : 'Data' },
@@ -501,7 +501,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
                 <div key={key} className={`flex items-center justify-between py-1.5 ${final ? 'mt-1 pt-2 border-t border-slate-100' : ''}`}>
                   <span className={`text-sm text-slate-600 ${final ? 'font-semibold' : ''}`}>
                     {label}
-                    {final && <span className="ml-1.5 text-xs text-blue-600 font-normal">(final gate)</span>}
+                    {final && <span className="ml-1.5 text-xs text-sky-600 font-normal">(final gate)</span>}
                   </span>
                   {tabVerified[key]
                     ? <span className="text-xs text-green-700 font-semibold flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>Complete</span>
@@ -512,13 +512,13 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
 
             {/* AQ Approval call-to-action if all other tabs done */}
             {!tabVerified.aqApproval && ['data','pricing','quote','signature'].every(k => tabVerified[k]) && (
-              <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 flex items-center justify-between">
+              <div className="rounded-lg bg-sky-50 border border-sky-200 px-4 py-3 flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-blue-900">All checks complete — AQ Approval pending</div>
-                  <div className="text-xs text-blue-700 mt-0.5">Confirm Trading team approval to unlock "Proceed to Data Sheet"</div>
+                  <div className="text-sm font-semibold text-sky-900">All checks complete — AQ Approval pending</div>
+                  <div className="text-xs text-sky-700 mt-0.5">Confirm Trading team approval to unlock "Proceed to Data Sheet"</div>
                 </div>
                 <button onClick={() => setActiveTab('aq-approval')}
-                  className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shrink-0 ml-3">
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-md shrink-0 ml-3">
                   Go to AQ Approval →
                 </button>
               </div>

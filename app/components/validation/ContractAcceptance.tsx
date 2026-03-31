@@ -33,9 +33,9 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Contract Accepted</h1>
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Contract Accepted</h1>
           <p className="text-slate-500 mb-8">The contract has been countersigned and stored successfully.</p>
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-left space-y-3 mb-8">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 text-left space-y-3 mb-8">
             {[
               { label: 'Contract Ref', value: contract.ref, mono: true },
               { label: 'Customer', value: contract.customer },
@@ -50,7 +50,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
             ))}
           </div>
           <button onClick={onBack}
-            className="px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1">
+            className="px-4 py-2 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1">
             Return to Validation Queue
           </button>
         </div>
@@ -81,7 +81,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
         {/* Left — contract summary + checklist */}
         <div className="col-span-2 space-y-5">
           {/* Contract summary */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Contract Summary</h2>
             <div className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
               {[
@@ -105,7 +105,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
           </div>
 
           {/* Mandatory validation checklist */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Mandatory Validation Checklist</h2>
             <div className="space-y-2">
               {checks.map(c => (
@@ -122,7 +122,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
           </div>
 
           {/* Storage path */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 flex items-center gap-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4 flex items-center gap-3">
             <svg className="w-5 h-5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
             </svg>
@@ -135,29 +135,29 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
 
         {/* Right — countersignature panel */}
         <div className="space-y-5">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Countersignature</h2>
 
             {!countersigned ? (
               <div className="space-y-4">
-                <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 text-center">
+                <div className="bg-sky-50 rounded-lg border border-sky-200 p-4 text-center">
                   <div className="text-xs text-slate-500 mb-2">Signing as</div>
                   <div className="text-base font-bold text-slate-900">{ANALYST_NAME}</div>
                   <div className="text-xs text-slate-400 mt-0.5">Contract Services</div>
                 </div>
-                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center">
+                <div className="border-2 border-dashed border-sky-200 rounded-lg bg-sky-50 p-6 text-center">
                   <div className="text-slate-300 text-4xl font-serif italic mb-1">{ANALYST_NAME}</div>
                   <div className="text-xs text-slate-400">Signature preview</div>
                 </div>
                 <button onClick={handleSign} disabled={!allChecksOk}
-                  className="w-full px-4 py-2 text-sm font-semibold text-white bg-[#0ea5e9] hover:bg-[#0284c7] rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-md shadow-sm hover:shadow transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={!allChecksOk ? 'All validation checks must pass before signing' : ''}>
                   Sign as {ANALYST_NAME}
                 </button>
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
                   <div className="text-3xl font-serif italic text-green-800 mb-1">{ANALYST_NAME}</div>
                   <div className="text-xs text-green-700 font-semibold">Countersigned</div>
                   <div className="font-mono text-xs text-green-600 mt-1">{new Date(timestamp).toLocaleString('en-GB')}</div>
@@ -172,7 +172,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
 
           {/* Confirm button */}
           <button onClick={handleConfirm} disabled={!canConfirm}
-            className="w-full px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 text-sm font-semibold text-white bg-green-500 hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
             title={!canConfirm ? (countersigned ? 'All checks must pass' : 'Apply countersignature first') : ''}>
             {!countersigned ? 'Apply Countersignature First' : !allChecksOk ? 'Validation Incomplete' : 'Confirm Acceptance'}
           </button>

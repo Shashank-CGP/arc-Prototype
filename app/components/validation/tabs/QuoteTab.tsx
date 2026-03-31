@@ -135,7 +135,7 @@ function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, neve
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              Quote Review — <span className="font-mono text-blue-700">{activeMpan}</span>
+              Quote Review — <span className="font-mono text-sky-600">{activeMpan}</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {activeSite.siteRef} · AQ {activeSite.aq.toLocaleString()} kWh · Both sections must be verified

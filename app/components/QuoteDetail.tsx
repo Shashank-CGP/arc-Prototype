@@ -40,12 +40,12 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
       </button>
 
       {/* Quote header card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-4">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 mb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-xl font-bold text-slate-900 font-mono">{quote.ref}</h1>
+                <h1 className="text-xl font-semibold text-slate-900 font-mono">{quote.ref}</h1>
                 <QuoteTypeBadge type={quote.quoteType} />
                 <StatusBadge status={quote.status} />
               </div>
@@ -73,13 +73,13 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
               </button>
               <button
                 onClick={onReject}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#ef4444] hover:bg-red-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
               >
                 Reject
               </button>
               <button
                 onClick={onApprove}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+                className="px-4 py-2 text-sm font-semibold text-white bg-green-500 hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
               >
                 Approve
               </button>
@@ -105,8 +105,8 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
 
       {/* Approval result banner */}
       {quote.status === 'Auto-Approved' || quote.status === 'Approved' ? (
-        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-xl bg-green-50 border border-green-200">
-          <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-lg bg-green-50 border border-green-200">
+          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
@@ -117,7 +117,7 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
           </div>
         </div>
       ) : quote.status === 'Manual Review' ? (
-        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-xl bg-amber-50 border border-amber-200">
+        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-lg bg-amber-50 border border-amber-200">
           <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -129,8 +129,8 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
           </div>
         </div>
       ) : quote.status === 'Rejected' ? (
-        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-xl bg-red-50 border border-red-200">
-          <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-lg bg-red-50 border border-red-200">
+          <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -146,7 +146,7 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
           </div>
         </div>
       ) : quote.status === 'Pending' && quote.dataAge > 30 ? (
-        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-xl bg-amber-50 border border-amber-200">
+        <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-lg bg-amber-50 border border-amber-200">
           <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -164,7 +164,7 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
 
       {/* Pricing warning */}
       {quote.pricingWarning && (
-        <div className="flex items-center gap-3 px-5 py-3 mb-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-sm">
+        <div className="flex items-center gap-3 px-5 py-3 mb-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm">
           <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
@@ -180,8 +180,8 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
               activeTab === tab
-                ? 'border-blue-600 text-blue-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                ? 'border-b-2 border-sky-500 text-sky-600 font-medium'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             {tab === 'overview' ? 'Overview' : 'Audit Trail'}
@@ -194,7 +194,7 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
       ) : (
         <div className="space-y-5">
           {/* Tolerance checks */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Tolerance Check Results</h2>
@@ -212,21 +212,21 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Rule</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Threshold</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actual</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Result</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Rule</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Threshold</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Actual</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Result</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {quote.toleranceResults.map((r) => (
                   <tr key={r.rule} className={r.result === 'Fail' ? 'bg-red-50' : ''}>
-                    <td className="px-5 py-3.5 font-medium text-slate-700">{r.rule}</td>
-                    <td className="px-5 py-3.5 font-mono text-xs text-slate-600">{r.threshold}</td>
-                    <td className={`px-5 py-3.5 font-mono text-sm font-semibold ${r.result === 'Fail' ? 'text-red-700' : 'text-slate-700'}`}>
+                    <td className="px-4 py-3 font-medium text-slate-700">{r.rule}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{r.threshold}</td>
+                    <td className={`px-4 py-3 font-mono text-sm font-semibold ${r.result === 'Fail' ? 'text-red-700' : 'text-slate-700'}`}>
                       {r.actual}
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-4 py-3">
                       {r.result === 'Pass' ? (
                         <span className="inline-flex items-center gap-1.5 text-green-700 font-semibold text-xs bg-green-50 px-2 py-1 rounded-full">
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -246,7 +246,7 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
           </div>
 
           {/* Sites */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100">
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Sites — {quote.sites.length} HH Meter{quote.sites.length !== 1 ? 's' : ''}</h2>
             </div>

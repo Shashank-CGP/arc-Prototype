@@ -8,9 +8,9 @@ interface Props {
 }
 
 const categoryStyle: Record<string, { icon: string; color: string; bg: string; border: string }> = {
-  auto:   { icon: '⚡', color: 'text-blue-700',  bg: 'bg-blue-100',  border: 'border-blue-300' },
-  manual: { icon: '👤', color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-300' },
-  system: { icon: '⚙',  color: 'text-violet-700', bg: 'bg-violet-100', border: 'border-violet-300' },
+  auto:   { icon: '⚡', color: 'text-sky-700',   bg: 'bg-sky-100',   border: 'border-sky-200' },
+  manual: { icon: '👤', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-200' },
+  system: { icon: '⚙',  color: 'text-slate-600', bg: 'bg-slate-100', border: 'border-slate-200' },
 };
 
 function fmt(ts: string) {
@@ -57,7 +57,7 @@ export function AuditTrailTab({ events, contractRef }: Props) {
                 <div className={`absolute left-3.5 top-3 w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs ${style.bg} ${style.border}`}>
                   <span>{style.icon}</span>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
                   <div className="flex items-start justify-between p-4 cursor-pointer hover:bg-slate-50" onClick={() => toggle(event.id)}>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">

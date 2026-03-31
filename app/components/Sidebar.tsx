@@ -9,11 +9,11 @@ interface Props {
 
 export function Sidebar({ currentScreen, onNavigate }: Props) {
   return (
-    <aside className="w-60 min-h-screen bg-[#0f1f3d] flex flex-col shrink-0">
+    <aside className="w-60 min-h-screen bg-[#1e293b] flex flex-col shrink-0">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-white/10">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center">
             <span className="text-white font-black text-sm tracking-tight">A</span>
           </div>
           <div>
@@ -33,8 +33,8 @@ export function Sidebar({ currentScreen, onNavigate }: Props) {
           onClick={() => onNavigate('queue')}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
             currentScreen === 'queue' || currentScreen === 'detail' || currentScreen === 'site'
-              ? 'bg-blue-600 text-white'
-              : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              ? 'bg-sky-600 text-white'
+              : 'text-slate-300 hover:bg-slate-700 hover:text-white'
           }`}
         >
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -47,8 +47,8 @@ export function Sidebar({ currentScreen, onNavigate }: Props) {
           onClick={() => onNavigate('validation-queue')}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
             currentScreen === 'validation-queue' || currentScreen === 'validation-detail' || currentScreen === 'contract-acceptance'
-              ? 'bg-blue-600 text-white'
-              : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              ? 'bg-sky-600 text-white'
+              : 'text-slate-300 hover:bg-slate-700 hover:text-white'
           }`}
         >
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -65,8 +65,8 @@ export function Sidebar({ currentScreen, onNavigate }: Props) {
           onClick={() => onNavigate('config')}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
             currentScreen === 'config'
-              ? 'bg-blue-600 text-white'
-              : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              ? 'bg-sky-600 text-white'
+              : 'text-slate-300 hover:bg-slate-700 hover:text-white'
           }`}
         >
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -80,7 +80,7 @@ export function Sidebar({ currentScreen, onNavigate }: Props) {
       {/* Footer */}
       <div className="px-6 py-4 border-t border-white/10">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+          <div className="w-7 h-7 rounded-full bg-sky-500 flex items-center justify-center text-white text-xs font-bold">
             TW
           </div>
           <div>

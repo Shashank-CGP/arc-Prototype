@@ -16,7 +16,7 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
   return (
     <div className="space-y-5">
       {/* ROI Summary */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">ROI Summary</h3>
         <div className="grid grid-cols-3 gap-5">
           {[
@@ -24,7 +24,7 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
             { label: 'Credit Threshold', value: `${CREDIT_THRESHOLD}%`, highlight: 'neutral' },
             { label: 'Status', value: roiOk ? 'No action required' : 'Credit approval required', highlight: roiOk ? 'green' : 'red' },
           ].map(item => (
-            <div key={item.label} className={`rounded-xl border p-4 ${
+            <div key={item.label} className={`rounded-lg border p-4 ${
               item.highlight === 'green' ? 'bg-green-50 border-green-200' :
               item.highlight === 'red' ? 'bg-red-50 border-red-200' :
               'bg-slate-50 border-slate-200'
@@ -67,9 +67,9 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
 
       {/* Credit approval panel (only when below threshold) */}
       {creditRequired && (
-        <div className="rounded-xl border border-red-200 overflow-hidden">
+        <div className="rounded-lg border border-red-200 overflow-hidden">
           <div className="flex items-start gap-3 px-5 py-4 bg-red-50">
-            <div className="w-9 h-9 rounded-full bg-red-600 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-full bg-red-500 flex items-center justify-center shrink-0">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
@@ -104,7 +104,7 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
               <div>
                 <div className="text-xs text-slate-500 font-medium mb-1">External system</div>
                 <a href="#" onClick={e => e.preventDefault()}
-                  className="text-sm font-semibold text-blue-600 hover:underline flex items-center gap-1">
+                  className="text-sm font-semibold text-sky-600 hover:underline flex items-center gap-1">
                   Open Credit Management System
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                 </a>
@@ -118,7 +118,7 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
               {/* Demo: simulate approval button */}
               {creditStatus === 'Pending' && (
                 <button onClick={onSimulateApproval}
-                  className="ml-4 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 shrink-0">
+                  className="ml-4 px-3 py-1.5 text-xs font-semibold text-sky-600 bg-sky-50 border border-sky-200 rounded-md hover:bg-sky-100 shrink-0">
                   Demo: Simulate Approval ↗
                 </button>
               )}
@@ -135,7 +135,7 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
 
       {/* No action needed */}
       {!creditRequired && (
-        <div className="flex items-center gap-3 px-5 py-4 rounded-xl bg-green-50 border border-green-200">
+        <div className="flex items-center gap-3 px-5 py-4 rounded-lg bg-green-50 border border-green-200">
           <svg className="w-5 h-5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
           <div>
             <div className="text-green-900 font-semibold text-sm">ROI above credit threshold — no approval required</div>

@@ -12,8 +12,8 @@ export function IndicatorsTab({ contract, onMarkReviewed, reviewed }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">AMP Indicators</h3>
           <span className="text-xs text-slate-500">Quote &amp; site level checks</span>
         </div>
@@ -44,7 +44,7 @@ export function IndicatorsTab({ contract, onMarkReviewed, reviewed }: Props) {
       </div>
 
       {/* Site reference check panel */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Site Reference Check</h3>
         <div className="grid grid-cols-3 gap-4 text-sm">
           {[
@@ -52,7 +52,7 @@ export function IndicatorsTab({ contract, onMarkReviewed, reviewed }: Props) {
             { label: 'Contract Start', value: contract.contractStart, ok: !contract.ampIndicators.some(a => a.id === 'amp2') },
             { label: 'Supply Overlap', value: 'None detected', ok: !contract.ampIndicators.some(a => a.label.includes('overlap')) },
           ].map(item => (
-            <div key={item.label} className={`rounded-xl p-4 border ${item.ok ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            <div key={item.label} className={`rounded-lg p-4 border ${item.ok ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
               <div className="text-xs text-slate-500 font-medium mb-1">{item.label}</div>
               <div className={`font-semibold text-sm font-mono ${item.ok ? 'text-green-800' : 'text-red-800'}`}>{item.value}</div>
               <div className={`text-xs mt-1 font-semibold ${item.ok ? 'text-green-600' : 'text-red-600'}`}>
@@ -71,7 +71,7 @@ export function IndicatorsTab({ contract, onMarkReviewed, reviewed }: Props) {
           </span>
         ) : (
           <button onClick={onMarkReviewed}
-            className="px-4 py-2 text-sm font-semibold text-white bg-[#22c55e] hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1">
+            className="px-4 py-2 text-sm font-semibold text-white bg-green-500 hover:bg-green-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1">
             Mark as Reviewed
           </button>
         )}

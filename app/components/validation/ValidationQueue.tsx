@@ -8,15 +8,15 @@ interface Props {
 }
 
 const statusBadge: Record<ContractStatus, { label: string; cls: string }> = {
-  'Auto-Approved': { label: 'Auto-Approved', cls: 'bg-green-100 text-green-800 ring-1 ring-green-300' },
-  'Manual Review': { label: 'Manual Review', cls: 'bg-amber-100 text-amber-800 ring-1 ring-amber-300' },
-  'Failed':        { label: 'Failed',         cls: 'bg-red-100 text-red-800 ring-1 ring-red-300' },
-  'Pending':       { label: 'Pending',         cls: 'bg-slate-100 text-slate-600 ring-1 ring-slate-300' },
-  'Accepted':      { label: 'Accepted',        cls: 'bg-blue-100 text-blue-800 ring-1 ring-blue-300' },
+  'Auto-Approved': { label: 'Auto-Approved', cls: 'bg-green-100 text-green-700 border border-green-200' },
+  'Manual Review': { label: 'Manual Review', cls: 'bg-amber-100 text-amber-700 border border-amber-200' },
+  'Failed':        { label: 'Failed',         cls: 'bg-red-100 text-red-700 border border-red-200' },
+  'Pending':       { label: 'Pending',         cls: 'bg-slate-100 text-slate-600 border border-slate-200' },
+  'Accepted':      { label: 'Accepted',        cls: 'bg-sky-100 text-sky-700 border border-sky-200' },
 };
 
 const typeBadge: Record<ContractType, string> = {
-  'New Business': 'bg-blue-100 text-blue-800 ring-1 ring-blue-300',
+  'New Business': 'bg-sky-100 text-sky-800 ring-1 ring-sky-300',
   'Renewal':      'bg-indigo-100 text-indigo-800 ring-1 ring-indigo-300',
 };
 
@@ -35,7 +35,7 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Validation Queue</h1>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Validation Queue</h1>
           <p className="text-sm text-slate-500 mt-1">Contract validation and acceptance — Power only</p>
         </div>
         <button
@@ -56,10 +56,10 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
           { label: 'Auto-Approved', value: contracts.filter(c => c.status === 'Auto-Approved').length, color: 'text-green-700' },
           { label: 'Manual Review', value: contracts.filter(c => c.status === 'Manual Review').length, color: 'text-amber-700' },
           { label: 'Failed', value: contracts.filter(c => c.status === 'Failed').length, color: 'text-red-700' },
-          { label: 'Accepted', value: contracts.filter(c => c.status === 'Accepted').length, color: 'text-blue-700' },
+          { label: 'Accepted', value: contracts.filter(c => c.status === 'Accepted').length, color: 'text-sky-600' },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm">
-            <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+          <div key={s.label} className="bg-white rounded-lg border border-slate-200 px-4 py-3 shadow-sm">
+            <div className={`text-xl font-semibold ${s.color}`}>{s.value}</div>
             <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
           </div>
         ))}
@@ -69,13 +69,13 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
       <div className="flex items-center gap-3 mb-4">
         <span className="text-sm text-slate-500 font-medium">Filter:</span>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)}
-          className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
           <option value="All">All Statuses</option>
           {(['Auto-Approved','Manual Review','Failed','Pending','Accepted'] as ContractStatus[]).map(s =>
             <option key={s} value={s}>{s}</option>)}
         </select>
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as any)}
-          className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
           <option value="All">All Contract Types</option>
           <option value="Renewal">Renewal</option>
           <option value="New Business">New Business</option>
@@ -84,17 +84,17 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contract / Customer</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Account Manager</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">AQ (kWh)</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Submitted</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Validation Status</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Result</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Contract / Customer</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Account Manager</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Type</th>
+              <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">AQ (kWh)</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Submitted</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Validation Status</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Result</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -103,9 +103,9 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
               const aqHigh = c.aq > 1000000;
               return (
                 <tr key={c.id} onClick={() => onSelect(c.id)}
-                  className="hover:bg-blue-50 cursor-pointer transition-colors group">
+                  className="hover:bg-slate-50 cursor-pointer transition-colors group border-b border-slate-100">
                   <td className="px-4 py-3.5">
-                    <div className="font-mono text-sm font-semibold text-blue-700 group-hover:text-blue-800 leading-none">{c.ref}</div>
+                    <div className="font-mono text-sm font-semibold text-sky-600 group-hover:text-sky-700 leading-none">{c.ref}</div>
                     <div className="text-xs font-medium text-slate-600 mt-1 tracking-wide">{c.customer}</div>
                   </td>
                   <td className="px-4 py-3.5 text-slate-600">{c.accountManager}</td>
@@ -123,7 +123,7 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
                   </td>
                   <td className="px-4 py-3.5 text-slate-500 text-xs">{c.submissionDate}</td>
                   <td className="px-4 py-3.5">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.cls}`}>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>
                       {s.label}
                     </span>
                   </td>
