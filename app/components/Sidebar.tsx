@@ -1,10 +1,10 @@
 'use client';
 
-type Screen = 'queue' | 'detail' | 'site' | 'config' | 'validation-queue' | 'validation-detail' | 'contract-acceptance';
+type Screen = 'queue' | 'detail' | 'site' | 'config' | 'validation-queue' | 'validation-detail' | 'contract-acceptance' | 'graph-validation';
 
 interface Props {
   currentScreen: Screen;
-  onNavigate: (screen: 'queue' | 'config' | 'validation-queue') => void;
+  onNavigate: (screen: 'queue' | 'config' | 'validation-queue' | 'graph-validation') => void;
 }
 
 export function Sidebar({ currentScreen, onNavigate }: Props) {
@@ -55,6 +55,20 @@ export function Sidebar({ currentScreen, onNavigate }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Validation Queue
+        </button>
+
+        <button
+          onClick={() => onNavigate('graph-validation')}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            currentScreen === 'graph-validation'
+              ? 'bg-sky-600 text-white'
+              : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+          }`}
+        >
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+          Graph Validation
         </button>
 
         <div className="px-3 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest mt-3 mb-1">

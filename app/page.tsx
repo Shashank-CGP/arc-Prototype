@@ -11,6 +11,7 @@ import { ConfigScreen } from './components/ConfigScreen';
 import { ValidationQueue } from './components/validation/ValidationQueue';
 import { ValidationDetail } from './components/validation/ValidationDetail';
 import { ContractAcceptance } from './components/validation/ContractAcceptance';
+import { GraphValidation } from './components/GraphValidation';
 
 type Screen =
   | { type: 'queue' }
@@ -19,7 +20,8 @@ type Screen =
   | { type: 'config' }
   | { type: 'validation-queue' }
   | { type: 'validation-detail'; contractId: string }
-  | { type: 'contract-acceptance'; contractId: string };
+  | { type: 'contract-acceptance'; contractId: string }
+  | { type: 'graph-validation' };
 
 interface ModalState {
   open: boolean;
@@ -123,6 +125,7 @@ export default function Home() {
         onNavigate={(dest) => {
           if (dest === 'queue') setScreen({ type: 'queue' });
           else if (dest === 'validation-queue') setScreen({ type: 'validation-queue' });
+          else if (dest === 'graph-validation') setScreen({ type: 'graph-validation' });
           else setScreen({ type: 'config' });
         }}
       />
@@ -155,6 +158,8 @@ export default function Home() {
         )}
 
         {screen.type === 'config' && <ConfigScreen />}
+
+        {screen.type === 'graph-validation' && <GraphValidation />}
 
         {screen.type === 'validation-queue' && (
           <ValidationQueue
