@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { Contract, ContractStatus, ContractType } from '../../data/validationData';
+import { Contract, ContractStatus, ContractType, initialBaskets, Basket } from '../../data/validationData';
+import { MpanRollupBadge } from '../shared/MpanRollupBadge';
+import { BasketGroupHeader } from '../shared/BasketGroupHeader';
 
 interface Props {
   contracts: Contract[];
@@ -24,6 +26,7 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
   const [statusFilter, setStatusFilter] = useState<ContractStatus | 'All'>('All');
   const [typeFilter, setTypeFilter] = useState<ContractType | 'All'>('All');
   const [exportToast, setExportToast] = useState(false);
+  const [groupByBasket, setGroupByBasket] = useState(true);
 
   const filtered = contracts.filter(c =>
     (statusFilter === 'All' || c.status === statusFilter) &&
@@ -80,6 +83,16 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
           <option value="Renewal">Renewal</option>
           <option value="New Business">New Business</option>
         </select>
+        <button
+          onClick={() => setGroupByBasket(g => !g)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+            groupByBasket
+              ? 'bg-sky-50 text-sky-700 border-sky-200'
+              : 'bg-white text-slate-500 border-slate-300 hover:bg-slate-50'
+          }`}
+        >
+          {groupByBasket ? '✓ Grouped by Basket' : 'Group by Basket'}
+        </button>
         <span className="text-xs text-slate-400 ml-auto">{filtered.length} of {contracts.length} contracts</span>
       </div>
 
@@ -93,51 +106,122 @@ export function ValidationQueue({ contracts, onSelect }: Props) {
               <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Type</th>
               <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">AQ (kWh)</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Submitted</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">MPANs</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Validation Status</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Result</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.map(c => {
-              const s = statusBadge[c.status];
-              const aqHigh = c.aq > 1000000;
-              return (
-                <tr key={c.id} onClick={() => onSelect(c.id)}
-                  className="hover:bg-slate-50 cursor-pointer transition-colors group border-b border-slate-100">
-                  <td className="px-4 py-3.5">
-                    <div className="font-mono text-sm font-semibold text-sky-600 group-hover:text-sky-700 leading-none">{c.ref}</div>
-                    <div className="text-xs font-medium text-slate-600 mt-1 tracking-wide">{c.customer}</div>
-                  </td>
-                  <td className="px-4 py-3.5 text-slate-600">{c.accountManager}</td>
-                  <td className="px-4 py-3.5">
-                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${typeBadge[c.contractType]}`}>
-                      {c.contractType}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <div className={`font-mono font-semibold ${aqHigh ? 'text-amber-700' : 'text-slate-700'} inline-flex items-center gap-1.5`}>
-                      {aqHigh && <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
-                      {c.aq.toLocaleString()}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3.5 text-slate-500 text-xs">{c.submissionDate}</td>
-                  <td className="px-4 py-3.5">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>
-                      {s.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5">
-                    {c.failureCount === 0
-                      ? <span className="text-xs text-green-700 font-semibold flex items-center gap-1">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          All checks passed
-                        </span>
-                      : <span className="text-xs text-amber-700 font-semibold">{c.failureCount} failure{c.failureCount > 1 ? 's' : ''}</span>}
-                  </td>
-                </tr>
-              );
-            })}
+            {(() => {
+              const statusSeverity: Record<string, number> = {
+                'Failed': 4,
+                'Manual Review': 3,
+                'Pending': 2,
+                'Accepted': 1,
+                'Auto-Approved': 0,
+              };
+
+              const renderRow = (c: Contract) => {
+                const s = statusBadge[c.status];
+                const aqHigh = c.aq > 1000000;
+                return (
+                  <tr key={c.id} onClick={() => onSelect(c.id)}
+                    className="hover:bg-slate-50 cursor-pointer transition-colors group border-b border-slate-100">
+                    <td className="px-4 py-3.5">
+                      <div className="font-mono text-sm font-semibold text-sky-600 group-hover:text-sky-700 leading-none">{c.ref}</div>
+                      <div className="text-xs font-medium text-slate-600 mt-1 tracking-wide">{c.customer}</div>
+                    </td>
+                    <td className="px-4 py-3.5 text-slate-600">{c.accountManager}</td>
+                    <td className="px-4 py-3.5">
+                      <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${typeBadge[c.contractType]}`}>
+                        {c.contractType}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-right">
+                      <div className={`font-mono font-semibold ${aqHigh ? 'text-amber-700' : 'text-slate-700'} inline-flex items-center gap-1.5`}>
+                        {aqHigh && <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
+                        {c.aq.toLocaleString()}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5 text-slate-500 text-xs">{c.submissionDate}</td>
+                    <td className="px-4 py-3">
+                      <MpanRollupBadge
+                        total={c.mpans?.length ?? 1}
+                        pass={c.mpans?.filter(s => {
+                          const hasRedAmp = s.ampIndicators.some(a => a.severity === 'red');
+                          const hasFailCheck = s.dataChecks.some(c => c.status === 'Fail');
+                          const hasCurveMismatch = s.curveName !== s.currentCurveName;
+                          return !hasRedAmp && !hasFailCheck && !hasCurveMismatch;
+                        }).length ?? (c.status === 'Auto-Approved' ? 1 : 0)}
+                        fail={c.mpans?.filter(s => {
+                          return s.ampIndicators.some(a => a.severity === 'red') ||
+                                 s.dataChecks.some(c => c.status === 'Fail') ||
+                                 s.curveName !== s.currentCurveName;
+                        }).length ?? (c.failureCount > 0 ? 1 : 0)}
+                        warn={c.mpans?.filter(s => {
+                          const hasAmber = s.ampIndicators.some(a => a.severity === 'amber');
+                          const hasWarnCheck = s.dataChecks.some(c => c.status === 'Warning');
+                          return hasAmber || hasWarnCheck;
+                        }).length ?? 0}
+                      />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>
+                        {s.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {c.failureCount === 0
+                        ? <span className="text-xs text-green-700 font-semibold flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            All checks passed
+                          </span>
+                        : <span className="text-xs text-amber-700 font-semibold">{c.failureCount} failure{c.failureCount > 1 ? 's' : ''}</span>}
+                    </td>
+                  </tr>
+                );
+              };
+
+              if (groupByBasket) {
+                const groups = new Map<string, Contract[]>();
+                for (const c of filtered) {
+                  const list = groups.get(c.basketId) ?? [];
+                  list.push(c);
+                  groups.set(c.basketId, list);
+                }
+
+                return Array.from(groups.entries()).map(([basketId, items]) => {
+                  const basket = initialBaskets.find(b => b.id === basketId) ?? {
+                    id: basketId,
+                    name: basketId,
+                    submittedDate: '',
+                    status: 'Open' as const,
+                  };
+                  const totalMpans = items.reduce((sum, c) => sum + (c.mpans?.length ?? 1), 0);
+                  const totalAq = items.reduce((sum, c) => sum + c.aq, 0);
+                  const worstStatus = items.reduce((worst, c) =>
+                    (statusSeverity[c.status] ?? 0) > (statusSeverity[worst] ?? 0) ? c.status : worst,
+                    items[0].status as string
+                  );
+
+                  return (
+                    <BasketGroupHeader
+                      key={basketId}
+                      basket={basket}
+                      itemCount={items.length}
+                      totalMpans={totalMpans}
+                      totalAq={totalAq}
+                      worstStatus={worstStatus}
+                    >
+                      {items.map(renderRow)}
+                    </BasketGroupHeader>
+                  );
+                });
+              }
+
+              return filtered.map(renderRow);
+            })()}
           </tbody>
         </table>
       </div>

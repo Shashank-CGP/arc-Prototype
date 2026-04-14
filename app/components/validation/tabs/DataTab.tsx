@@ -260,13 +260,19 @@ export function DataTab({ contract, onMarkReviewed, reviewed }: Props) {
     });
   };
 
+  const handleReviewAll = () => {
+    const all = new Set(sites.map(s => s.mpan));
+    setReviewedMpans(all);
+    if (!reviewed) onMarkReviewed();
+  };
+
   const activeSite    = sites.find(s => s.mpan === activeMpan)!;
   const mpanContract  = buildMpanContract(contract, activeSite);
   const isActiveReviewed = reviewedMpans.has(activeMpan);
 
   return (
     <div className="space-y-4">
-      <MpanSummaryBar sites={sites} getStatus={getMpanDataStatus} verifiedSet={reviewedMpans} />
+      <MpanSummaryBar sites={sites} getStatus={getMpanDataStatus} verifiedSet={reviewedMpans} onReviewAll={handleReviewAll} />
       <MpanSubTabBar  sites={sites} activeMpan={activeMpan} onSelect={setActiveMpan} getStatus={getMpanDataStatus} verifiedSet={reviewedMpans} />
       <DataContent
         contract={mpanContract}

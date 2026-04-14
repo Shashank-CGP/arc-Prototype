@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { initialQuotes, Quote, QuoteStatus } from './data/mockData';
-import { initialContracts, Contract } from './data/validationData';
+import { initialContracts, Contract, initialBaskets, Basket } from './data/validationData';
 import { Sidebar } from './components/Sidebar';
 import { QuoteQueue } from './components/QuoteQueue';
 import { QuoteDetail } from './components/QuoteDetail';
@@ -118,6 +118,35 @@ export default function Home() {
     setContracts((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
   };
 
+  const getBasketContext = (basketId: string) => {
+    const basket = initialBaskets.find(b => b.id === basketId);
+    if (!basket) return { basket: undefined, siblings: [] };
+
+    const siblingQuotes = quotes
+      .filter(q => q.basketId === basketId)
+      .map(q => ({ id: q.id, ref: q.ref, type: 'quote' as const, status: q.status }));
+
+    const siblingContracts = contracts
+      .filter(c => c.basketId === basketId)
+      .map(c => ({ id: c.id, ref: c.ref, type: 'contract' as const, status: c.status }));
+
+    return {
+      basket,
+      siblings: [...siblingQuotes, ...siblingContracts],
+    };
+  };
+
+  const handleNavigateToSibling = (type: 'quote' | 'contract', id: string) => {
+    if (type === 'quote') {
+      setScreen({ type: 'detail', quoteId: id });
+    } else {
+      setScreen({ type: 'validation-detail', contractId: id });
+    }
+  };
+
+  const quoteBasketCtx = selectedQuote ? getBasketContext(selectedQuote.basketId) : null;
+  const contractBasketCtx = selectedContract ? getBasketContext(selectedContract.basketId) : null;
+
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
       <Sidebar
@@ -147,6 +176,9 @@ export default function Home() {
             }
             onApprove={() => setModal({ open: true, mode: 'approve', quoteId: selectedQuote.id })}
             onReject={() => setModal({ open: true, mode: 'reject', quoteId: selectedQuote.id })}
+            basket={quoteBasketCtx?.basket}
+            siblingRefs={quoteBasketCtx?.siblings}
+            onNavigateToSibling={handleNavigateToSibling}
           />
         )}
 
@@ -176,6 +208,9 @@ export default function Home() {
               setScreen({ type: 'contract-acceptance', contractId: selectedContract.id })
             }
             onUpdateStatus={(status) => updateContractStatus(selectedContract.id, status)}
+            basket={contractBasketCtx?.basket}
+            siblingRefs={contractBasketCtx?.siblings}
+            onNavigateToSibling={handleNavigateToSibling}
           />
         )}
 

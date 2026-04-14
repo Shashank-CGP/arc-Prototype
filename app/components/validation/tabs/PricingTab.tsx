@@ -330,13 +330,19 @@ export function PricingTab({ contract, onMarkVerified, verified }: Props) {
     });
   };
 
+  const handleReviewAll = () => {
+    const all = new Set(sites.map(s => s.mpan));
+    setReviewedMpans(all);
+    if (!verified) onMarkVerified();
+  };
+
   const activeSite       = sites.find(s => s.mpan === activeMpan)!;
   const mpanContract     = buildMpanContract(contract, activeSite);
   const isActiveVerified = reviewedMpans.has(activeMpan);
 
   return (
     <div className="space-y-4">
-      <MpanSummaryBar sites={sites} getStatus={getMpanPricingStatus} verifiedSet={reviewedMpans} />
+      <MpanSummaryBar sites={sites} getStatus={getMpanPricingStatus} verifiedSet={reviewedMpans} onReviewAll={handleReviewAll} />
       <MpanSubTabBar  sites={sites} activeMpan={activeMpan} onSelect={setActiveMpan} getStatus={getMpanPricingStatus} verifiedSet={reviewedMpans} />
       <PricingContent
         contract={mpanContract}

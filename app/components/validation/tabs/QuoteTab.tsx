@@ -117,6 +117,13 @@ function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, neve
     });
   };
 
+  const handleReviewAll = () => {
+    const allVerif: Record<string, MpanVerification> = {};
+    sites.forEach(s => { allVerif[s.mpan] = { curve: true, indicators: true }; });
+    setMpanVerif(allVerif);
+    if (!verified) onMarkVerified();
+  };
+
   const [activeMpan, setActiveMpan] = useState(sites[0].mpan);
 
   const activeSite    = sites.find(s => s.mpan === activeMpan)!;
@@ -126,7 +133,7 @@ function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, neve
 
   return (
     <div className="space-y-4">
-      <MpanSummaryBar sites={sites} getStatus={getMpanQuoteStatus} verifiedSet={verifiedSet} />
+      <MpanSummaryBar sites={sites} getStatus={getMpanQuoteStatus} verifiedSet={verifiedSet} onReviewAll={handleReviewAll} />
       <MpanSubTabBar  sites={sites} activeMpan={activeMpan} onSelect={setActiveMpan} getStatus={getMpanQuoteStatus} verifiedSet={verifiedSet} />
 
       {/* Per-MPAN content */}

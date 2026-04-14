@@ -13,6 +13,22 @@ export type CreditStatus = 'N/A' | 'Pending' | 'Approved' | 'Rejected';
  */
 export const AQ_APPROVAL_THRESHOLD = 300_000;
 
+// ─── Basket ──────────────────────────────────────────────────────
+
+export type BasketStatus = 'Open' | 'In Progress' | 'Complete';
+
+export interface Basket {
+  id: string;
+  name: string;
+  submittedDate: string;
+  status: BasketStatus;
+}
+
+export const initialBaskets: Basket[] = [
+  { id: 'BSK-001', name: 'Q2 Industrial Tender',   submittedDate: '2025-09-10', status: 'In Progress' },
+  { id: 'BSK-002', name: 'Retail Framework Batch',  submittedDate: '2025-09-14', status: 'Open' },
+];
+
 export interface ValidationCheck {
   status: ValidationResult;
   message: string;
@@ -86,6 +102,7 @@ export interface MpanSite {
 export interface Contract {
   id: string;
   ref: string;
+  basketId: string;
   customer: string;
   accountManager: string;
   aq: number;
@@ -216,6 +233,7 @@ export const initialContracts: Contract[] = [
   {
     id: 'c1',
     ref: 'CON-2024-04421',
+    basketId: 'BSK-001',
     customer: 'MERIDIAN FOODS LTD',
     accountManager: 'James Okafor',
     aq: 485000,
@@ -360,6 +378,7 @@ export const initialContracts: Contract[] = [
   {
     id: 'c2',
     ref: 'CON-2024-04398',
+    basketId: 'BSK-001',
     customer: 'BLACKSTONE MANUFACTURING',
     accountManager: 'Sarah Briggs',
     aq: 1850000,
@@ -413,12 +432,66 @@ export const initialContracts: Contract[] = [
       { id: 'b3', timestamp: '2025-09-10T14:18:09Z', action: 'Credit Approval Required', user: 'System (Arc)', detail: 'ROI below 5% threshold. Credit approval notification sent to Phil Marsden (Credit Director).', category: 'auto' },
       { id: 'b4', timestamp: '2025-09-10T16:22:30Z', action: 'Manual Review Opened', user: 'Fatima Al-Rashid', detail: 'Contract opened for manual review. ROI & Credit tab reviewed.', category: 'manual' },
     ],
+    mpans: [
+      // ── Site 1: Main plant — all clean ───────────────────────────
+      {
+        mpan: '1087234567800',
+        siteRef: 'BSTONE-MAIN',
+        aq: 1200000,
+        unitRate: 22.14,
+        standingCharge: 52.00,
+        contractStart: '01/10/2025',
+        contractEnd: '30/09/2027',
+        hhDataQuality: 'Pass',
+        dataChecks: [
+          { id: 'd1', name: 'MPAN format',          expected: '13-digit numeric', actual: '1087234567800', status: 'Pass' },
+          { id: 'd2', name: 'EAC within tolerance', expected: '900,000–1,500,000 kWh', actual: '1,200,000 kWh', status: 'Pass' },
+          { id: 'd3', name: 'Contract start date',  expected: '01/10/2025', actual: '01/10/2025', status: 'Pass' },
+          { id: 'd4', name: 'Contract duration',    expected: '24 months', actual: '24 months', status: 'Pass' },
+          { id: 'd5', name: 'Supplier code',        expected: 'EDF Energy (EDF)', actual: 'EDF', status: 'Pass' },
+        ],
+        ampIndicators: [],
+        pricingRows: BASE_PRICING_ROWS.map(r => ({ ...r, value: +(r.value * 0.895).toFixed(4) })),
+        standingRows: BASE_STANDING_ROWS,
+        curveData: makeCurve(22.14, false),
+        curveName: 'ARC-CURVE-2025-Q4-v3',
+        currentCurveName: 'ARC-CURVE-2025-Q4-v3',
+      },
+      // ── Site 2: Annex — HH data warning ──────────────────────────
+      {
+        mpan: '1087234567811',
+        siteRef: 'BSTONE-ANNEX',
+        aq: 650000,
+        unitRate: 22.14,
+        standingCharge: 52.00,
+        contractStart: '01/10/2025',
+        contractEnd: '30/09/2027',
+        hhDataQuality: 'Warning',
+        dataChecks: [
+          { id: 'd1', name: 'MPAN format',          expected: '13-digit numeric', actual: '1087234567811', status: 'Pass' },
+          { id: 'd2', name: 'EAC within tolerance', expected: '500,000–800,000 kWh', actual: '650,000 kWh', status: 'Pass' },
+          { id: 'd3', name: 'Contract start date',  expected: '01/10/2025', actual: '01/10/2025', status: 'Pass' },
+          { id: 'd4', name: 'Contract duration',    expected: '24 months', actual: '24 months', status: 'Pass' },
+          { id: 'd5', name: 'Supplier code',        expected: 'EDF Energy (EDF)', actual: 'EDF', status: 'Pass' },
+          { id: 'd6', name: 'HH Data Quality',      expected: 'Complete 30-min intervals', actual: '5 missing intervals', status: 'Warning' },
+        ],
+        ampIndicators: [
+          { id: 'amp-b1', label: 'Start date discrepancy', severity: 'amber', detail: 'Contract start 01/10/2025 vs AMP effective 08/10/2025 — 7-day gap' },
+        ],
+        pricingRows: BASE_PRICING_ROWS.map(r => ({ ...r, value: +(r.value * 0.895).toFixed(4) })),
+        standingRows: BASE_STANDING_ROWS,
+        curveData: makeCurve(22.14, false),
+        curveName: 'ARC-CURVE-2025-Q4-v3',
+        currentCurveName: 'ARC-CURVE-2025-Q4-v3',
+      },
+    ],
   },
 
   // ── CON-2024-04455 — Curve mismatch + pricing variance ────────
   {
     id: 'c3',
     ref: 'CON-2024-04455',
+    basketId: 'BSK-002',
     customer: 'CASTLEFORD INDUSTRIAL',
     accountManager: 'James Okafor',
     aq: 320000,
@@ -475,6 +548,59 @@ export const initialContracts: Contract[] = [
       { id: 'c3', timestamp: '2025-09-14T11:05:27Z', action: 'Curve Mismatch Flagged', user: 'System (Arc)', detail: 'Contract locked to superseded curve ARC-CURVE-2025-Q3-v1. Current approved curve is ARC-CURVE-2025-Q4-v3. Peak divergence +11.4%.', category: 'auto' },
       { id: 'c4', timestamp: '2025-09-14T11:05:28Z', action: 'Pricing Variance Flagged', user: 'System (Arc)', detail: 'Standing charge MAP component £0.51/day vs expected range £0.30–£0.45/day.', category: 'auto' },
       { id: 'c5', timestamp: '2025-09-14T13:44:10Z', action: 'Manual Review Opened', user: 'Tom Walsh', detail: 'Contract opened for manual review. Curve and Pricing tabs reviewed.', category: 'manual' },
+    ],
+    mpans: [
+      // ── Site 1: Plant A — curve mismatch + site ref fail ─────────
+      {
+        mpan: '1012345678901',
+        siteRef: 'CFORD-PLANT-A',
+        aq: 200000,
+        unitRate: 24.85,
+        standingCharge: 1.05,
+        contractStart: '01/10/2025',
+        contractEnd: '30/09/2027',
+        hhDataQuality: 'Pass',
+        dataChecks: [
+          { id: 'd1', name: 'MPAN format',          expected: '13-digit numeric', actual: '1012345678901', status: 'Pass' },
+          { id: 'd2', name: 'EAC within tolerance', expected: '150,000–250,000 kWh', actual: '200,000 kWh', status: 'Pass' },
+          { id: 'd3', name: 'Contract start date',  expected: '01/10/2025', actual: '01/10/2025', status: 'Pass' },
+          { id: 'd4', name: 'Contract duration',    expected: '24 months', actual: '24 months', status: 'Pass' },
+          { id: 'd5', name: 'Supplier code',        expected: 'Engie (ENE)', actual: 'ENE', status: 'Pass' },
+        ],
+        ampIndicators: [
+          { id: 'amp1', label: 'Site reference mismatch', severity: 'red',   detail: 'CFORD-PLANT-A on contract vs SITE-001 in AMP — manual reconciliation required' },
+          { id: 'amp2', label: 'Start date discrepancy',  severity: 'amber', detail: 'Contract start 01/10/2025 vs AMP effective date 15/10/2025 — 14-day gap' },
+        ],
+        pricingRows: BASE_PRICING_ROWS,
+        standingRows: MISMATCH_STANDING_ROWS,
+        curveData: makeCurve(24.85, true),
+        curveName: 'ARC-CURVE-2025-Q3-v1',
+        currentCurveName: 'ARC-CURVE-2025-Q4-v3',
+      },
+      // ── Site 2: Warehouse — clean ────────────────────────────────
+      {
+        mpan: '1012345679902',
+        siteRef: 'CFORD-WAREHOUSE',
+        aq: 120000,
+        unitRate: 24.85,
+        standingCharge: 0.78,
+        contractStart: '01/10/2025',
+        contractEnd: '30/09/2027',
+        hhDataQuality: 'Pass',
+        dataChecks: [
+          { id: 'd1', name: 'MPAN format',          expected: '13-digit numeric', actual: '1012345679902', status: 'Pass' },
+          { id: 'd2', name: 'EAC within tolerance', expected: '90,000–150,000 kWh', actual: '120,000 kWh', status: 'Pass' },
+          { id: 'd3', name: 'Contract start date',  expected: '01/10/2025', actual: '01/10/2025', status: 'Pass' },
+          { id: 'd4', name: 'Contract duration',    expected: '24 months', actual: '24 months', status: 'Pass' },
+          { id: 'd5', name: 'Supplier code',        expected: 'Engie (ENE)', actual: 'ENE', status: 'Pass' },
+        ],
+        ampIndicators: [],
+        pricingRows: BASE_PRICING_ROWS,
+        standingRows: BASE_STANDING_ROWS,
+        curveData: makeCurve(24.85, false),
+        curveName: 'ARC-CURVE-2025-Q4-v3',
+        currentCurveName: 'ARC-CURVE-2025-Q4-v3',
+      },
     ],
   },
 ];

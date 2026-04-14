@@ -46,6 +46,7 @@ export interface AuditEvent {
 export interface Quote {
   id: string;
   ref: string;
+  basketId: string;
   customer: string;
   accountManager: string;
   analyst: string;
@@ -118,6 +119,7 @@ export const initialQuotes: Quote[] = [
   {
     id: '1',
     ref: 'PQ00000001',
+    basketId: 'BSK-001',
     customer: 'MERIDIAN FOODS LTD',
     accountManager: 'Sarah Briggs',
     analyst: 'Tom Walsh',
@@ -205,6 +207,7 @@ export const initialQuotes: Quote[] = [
   {
     id: '2',
     ref: 'PQ00000002',
+    basketId: 'BSK-001',
     customer: 'BLACKSTONE MANUFACTURING',
     accountManager: 'James Okafor',
     analyst: 'Fatima Al-Rashid',
@@ -319,6 +322,7 @@ export const initialQuotes: Quote[] = [
   {
     id: '3',
     ref: 'PQ00000003',
+    basketId: 'BSK-001',
     customer: 'HARTLEY LOGISTICS GROUP',
     accountManager: 'Priya Nair',
     analyst: 'Tom Walsh',
@@ -394,6 +398,7 @@ export const initialQuotes: Quote[] = [
   {
     id: '4',
     ref: 'PQ00000004',
+    basketId: 'BSK-002',
     customer: 'FERNWOOD RETAIL LTD',
     accountManager: 'Sarah Briggs',
     analyst: 'Fatima Al-Rashid',
@@ -481,6 +486,7 @@ export const initialQuotes: Quote[] = [
   {
     id: '5',
     ref: 'PQ00000005',
+    basketId: 'BSK-002',
     customer: 'CASTLEFORD INDUSTRIAL',
     accountManager: 'James Okafor',
     analyst: 'Tom Walsh',

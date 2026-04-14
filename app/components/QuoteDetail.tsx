@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { Quote } from '../data/mockData';
+import { Basket } from '../data/validationData';
+import { BasketContextBar } from './shared/BasketContextBar';
 import { StatusBadge } from './StatusBadge';
 import { QuoteTypeBadge } from './QuoteTypeBadge';
 import { AuditTrail } from './AuditTrail';
@@ -11,9 +13,12 @@ interface Props {
   onExpandSite: (siteIndex: number) => void;
   onApprove: () => void;
   onReject: () => void;
+  basket?: Basket;
+  siblingRefs?: { id: string; ref: string; type: 'quote' | 'contract'; status: string }[];
+  onNavigateToSibling?: (type: 'quote' | 'contract', id: string) => void;
 }
 
-export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }: Props) {
+export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject, basket, siblingRefs, onNavigateToSibling }: Props) {
   const [activeTab, setActiveTab] = useState<'overview' | 'audit'>('overview');
   const [expandedSiteIds, setExpandedSiteIds] = useState<Set<string>>(new Set());
 
@@ -38,6 +43,15 @@ export function QuoteDetail({ quote, onBack, onExpandSite, onApprove, onReject }
         </svg>
         Curve Approval Queue
       </button>
+
+      {basket && siblingRefs && siblingRefs.length > 0 && onNavigateToSibling && (
+        <BasketContextBar
+          basket={basket}
+          currentRef={quote.ref}
+          siblings={siblingRefs}
+          onNavigate={onNavigateToSibling}
+        />
+      )}
 
       {/* Quote header card */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 mb-4">

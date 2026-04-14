@@ -1,6 +1,7 @@
 'use client';
 import { useState, Fragment } from 'react';
-import { Contract, ValidationResult, CreditStatus, AQ_APPROVAL_THRESHOLD } from '../../data/validationData';
+import { Contract, Basket, ValidationResult, CreditStatus, AQ_APPROVAL_THRESHOLD } from '../../data/validationData';
+import { BasketContextBar } from '../shared/BasketContextBar';
 import { DataTab, getMpanDataStatus } from './tabs/DataTab';
 import { PricingTab, getMpanPricingStatus } from './tabs/PricingTab';
 import { QuoteTab, getMpanQuoteStatus } from './tabs/QuoteTab';
@@ -13,6 +14,9 @@ interface Props {
   onBack: () => void;
   onProceedToAcceptance: () => void;
   onUpdateStatus: (status: Contract['status']) => void;
+  basket?: Basket;
+  siblingRefs?: { id: string; ref: string; type: 'quote' | 'contract'; status: string }[];
+  onNavigateToSibling?: (type: 'quote' | 'contract', id: string) => void;
 }
 
 type AllTabs = 'overview' | 'data' | 'pricing' | 'quote' | 'signature' | 'aq-approval' | 'audit';
@@ -34,7 +38,7 @@ function ResultIcon({ status, size = 'sm' }: { status: ValidationResult; size?: 
   return <svg className={`${sz} text-slate-400`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="9" /></svg>;
 }
 
-export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUpdateStatus }: Props) {
+export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUpdateStatus, basket, siblingRefs, onNavigateToSibling }: Props) {
   const checks = contract.validationChecks;
 
   const [activeTab, setActiveTab] = useState<AllTabs>('overview');
@@ -106,14 +110,44 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
   const mpanCount   = contract.mpans?.length ?? 0;
   const mpanBadge   = mpanCount > 1 ? ` (${mpanCount} MPANs)` : '';
 
+  // Per-MPAN issue derivation for checklist attribution
+  type MpanDetail = { mpan: string; siteRef: string; status: ValidationResult; issue?: string };
+
+  const deriveMpanDetails = (category: 'data' | 'pricing' | 'quote'): MpanDetail[] => {
+    if (!contract.mpans || contract.mpans.length <= 1) return [];
+    return contract.mpans.map(s => {
+      if (category === 'data') {
+        const st = getMpanDataStatus(s);
+        const failCheck = s.dataChecks.find(c => c.status === 'Fail');
+        const redAmp = s.ampIndicators.find(a => a.severity === 'red');
+        const issue = redAmp ? redAmp.detail : failCheck ? `${failCheck.name}: ${failCheck.actual}` : undefined;
+        return { mpan: s.mpan, siteRef: s.siteRef, status: st, issue };
+      }
+      if (category === 'pricing') {
+        const st = getMpanPricingStatus(s);
+        const breach = [...s.pricingRows, ...s.standingRows].find(r =>
+          r.anomalyRange && (r.value < r.anomalyRange.min || r.value > r.anomalyRange.max));
+        return { mpan: s.mpan, siteRef: s.siteRef, status: st, issue: breach ? `${breach.name}: ${breach.value} outside ${breach.anomalyRange!.min}–${breach.anomalyRange!.max}` : undefined };
+      }
+      // quote
+      const st = getMpanQuoteStatus(s);
+      const issue = s.curveName !== s.currentCurveName
+        ? `Curve ${s.curveName} superseded (current: ${s.currentCurveName})`
+        : s.ampIndicators.length > 0 ? `${s.ampIndicators.length} AMP indicator(s)` : undefined;
+      return { mpan: s.mpan, siteRef: s.siteRef, status: st, issue };
+    });
+  };
+
   // Overview checklist — 5 items mapping to the 5 content tabs
-  const checklistItems: { key: string; label: string; message: string; status: ValidationResult; tab: AllTabs }[] = [
+  type ChecklistItem = { key: string; label: string; message: string; status: ValidationResult; tab: AllTabs; mpanDetails?: MpanDetail[] };
+  const checklistItems: ChecklistItem[] = [
     {
       key: 'data',
       label: `Data Integrity${mpanBadge}`,
       message: checks.dataIntegrity.message,
       status: tabVerified.data ? 'Pass' : checks.dataIntegrity.status,
       tab: 'data',
+      mpanDetails: deriveMpanDetails('data'),
     },
     {
       key: 'pricing',
@@ -121,6 +155,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
       message: checks.pricingAccuracy.message,
       status: tabVerified.pricing ? 'Pass' : checks.pricingAccuracy.status,
       tab: 'pricing',
+      mpanDetails: deriveMpanDetails('pricing'),
     },
     {
       key: 'quote',
@@ -128,6 +163,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
       message: quoteMessage,
       status: quoteStatus,
       tab: 'quote',
+      mpanDetails: deriveMpanDetails('quote'),
     },
     {
       key: 'signature',
@@ -154,6 +190,15 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         Validation Queue
       </button>
+
+      {basket && siblingRefs && siblingRefs.length > 0 && onNavigateToSibling && (
+        <BasketContextBar
+          basket={basket}
+          currentRef={contract.ref}
+          siblings={siblingRefs}
+          onNavigate={onNavigateToSibling}
+        />
+      )}
 
       {/* Contract header */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 mb-4">
@@ -381,23 +426,40 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             <div className="space-y-1">
               {checklistItems.map((item, i) => {
                 const isLast = i === checklistItems.length - 1;
+                const nonPassMpans = item.mpanDetails?.filter(d => d.status !== 'Pass') ?? [];
+                const hasAttribution = nonPassMpans.length > 0 && item.status !== 'Pass';
                 return (
-                  <button key={item.key} onClick={() => setActiveTab(item.tab)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors group text-left ${isLast ? 'mt-2 border border-dashed border-sky-200 bg-sky-50/40 hover:bg-sky-50' : ''}`}>
-                    <ResultIcon status={item.status} size="lg" />
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-sm font-semibold ${isLast ? 'text-sky-800' : 'text-slate-800'} group-hover:text-sky-700`}>
-                        {item.label}
-                        {isLast && (
-                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-700">Final gate</span>
-                        )}
+                  <div key={item.key}>
+                    <button onClick={() => setActiveTab(item.tab)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors group text-left ${isLast ? 'mt-2 border border-dashed border-sky-200 bg-sky-50/40 hover:bg-sky-50' : ''}`}>
+                      <ResultIcon status={item.status} size="lg" />
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-sm font-semibold ${isLast ? 'text-sky-800' : 'text-slate-800'} group-hover:text-sky-700`}>
+                          {item.label}
+                          {isLast && (
+                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-700">Final gate</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 truncate">{item.message}</div>
                       </div>
-                      <div className="text-xs text-slate-500 truncate">{item.message}</div>
-                    </div>
-                    <svg className="w-4 h-4 text-slate-300 group-hover:text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                      <svg className="w-4 h-4 text-slate-300 group-hover:text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    {/* Per-MPAN failure attribution */}
+                    {hasAttribution && (
+                      <div className="ml-8 mt-1 mb-1.5 space-y-0.5">
+                        {nonPassMpans.map(d => (
+                          <div key={d.mpan} className="flex items-center gap-2 text-xs">
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${d.status === 'Fail' ? 'bg-red-500' : 'bg-amber-400'}`} />
+                            <span className="font-mono text-slate-600">{d.mpan}</span>
+                            <span className="text-slate-400">({d.siteRef})</span>
+                            {d.issue && <span className={d.status === 'Fail' ? 'text-red-600' : 'text-amber-600'}>— {d.issue}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>

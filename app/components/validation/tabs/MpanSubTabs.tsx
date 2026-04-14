@@ -9,6 +9,7 @@ interface SummaryBarProps {
   sites: MpanSite[];
   getStatus: MpanStatusFn;
   verifiedSet: Set<string>;
+  onReviewAll?: () => void;
 }
 
 function StatusPill({ label, count, variant }: { label: string; count: number; variant: 'green' | 'red' | 'amber' | 'neutral' }) {
@@ -40,12 +41,13 @@ function StatusPill({ label, count, variant }: { label: string; count: number; v
   );
 }
 
-export function MpanSummaryBar({ sites, getStatus, verifiedSet }: SummaryBarProps) {
+export function MpanSummaryBar({ sites, getStatus, verifiedSet, onReviewAll }: SummaryBarProps) {
   const verified = sites.filter(s => verifiedSet.has(s.mpan)).length;
   const failures = sites.filter(s => !verifiedSet.has(s.mpan) && getStatus(s) === 'Fail').length;
   const warnings = sites.filter(s => !verifiedSet.has(s.mpan) && getStatus(s) === 'Warning').length;
   const pending  = sites.filter(s => !verifiedSet.has(s.mpan) && getStatus(s) === 'Pass').length;
   const allDone  = verified === sites.length;
+  const hasUnreviewed = verified < sites.length;
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-3">
@@ -60,12 +62,20 @@ export function MpanSummaryBar({ sites, getStatus, verifiedSet }: SummaryBarProp
             </span>
           )}
         </div>
-        {/* Right: status pills */}
+        {/* Right: status pills + bulk action */}
         <div className="flex items-center gap-2 flex-wrap">
           {verified > 0  && <StatusPill label={verified === 1 ? 'verified' : 'verified'} count={verified} variant="green" />}
           {failures > 0  && <StatusPill label={failures === 1 ? 'failed' : 'failed'} count={failures} variant="red" />}
           {warnings > 0  && <StatusPill label={warnings === 1 ? 'warning' : 'warnings'} count={warnings} variant="amber" />}
           {pending > 0   && <StatusPill label={pending === 1 ? 'pending' : 'pending'} count={pending} variant="neutral" />}
+          {hasUnreviewed && onReviewAll && (
+            <button
+              onClick={onReviewAll}
+              className="px-3 py-1 text-xs font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-md shadow-sm transition-colors ml-1"
+            >
+              Review all remaining
+            </button>
+          )}
         </div>
       </div>
       {/* Per-MPAN mini-list */}

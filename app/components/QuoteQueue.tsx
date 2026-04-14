@@ -1,22 +1,48 @@
 'use client';
 import { useState } from 'react';
 import { Quote, QuoteType, QuoteStatus } from '../data/mockData';
+import { initialBaskets, Basket } from '../data/validationData';
+import { MpanRollupBadge } from './shared/MpanRollupBadge';
+import { BasketGroupHeader } from './shared/BasketGroupHeader';
 import { StatusBadge } from './StatusBadge';
 import { QuoteTypeBadge } from './QuoteTypeBadge';
 
 interface Props {
   quotes: Quote[];
   onSelectQuote: (id: string) => void;
+  baskets?: Basket[];
 }
 
 const allTypes: QuoteType[] = ['Renewal', 'New Business', 'Mixed', 'Framework'];
 const allStatuses: QuoteStatus[] = ['Pending', 'Auto-Approved', 'Manual Review', 'Rejected', 'Escalated', 'Approved'];
 
-export function QuoteQueue({ quotes, onSelectQuote }: Props) {
+const STATUS_SEVERITY: Record<string, number> = {
+  'Approved': 0,
+  'Auto-Approved': 1,
+  'Pending': 2,
+  'Manual Review': 3,
+  'Escalated': 4,
+  'Rejected': 5,
+};
+
+function worstStatusOf(quotes: Quote[]): string {
+  let worst = 'Approved';
+  for (const q of quotes) {
+    if ((STATUS_SEVERITY[q.status] ?? 0) > (STATUS_SEVERITY[worst] ?? 0)) {
+      worst = q.status;
+    }
+  }
+  return worst;
+}
+
+export function QuoteQueue({ quotes, onSelectQuote, baskets }: Props) {
   const [typeFilter, setTypeFilter] = useState<QuoteType | 'All'>('All');
   const [statusFilter, setStatusFilter] = useState<QuoteStatus | 'All'>('All');
   const [refreshing, setRefreshing] = useState(false);
   const [showExportToast, setShowExportToast] = useState(false);
+  const [groupByBasket, setGroupByBasket] = useState(true);
+
+  const resolvedBaskets = baskets ?? initialBaskets;
 
   const filtered = quotes.filter((q) => {
     if (typeFilter !== 'All' && q.quoteType !== typeFilter) return false;
@@ -109,6 +135,16 @@ export function QuoteQueue({ quotes, onSelectQuote }: Props) {
           <option value="All">All Statuses</option>
           {allStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
+        <button
+          onClick={() => setGroupByBasket(g => !g)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+            groupByBasket
+              ? 'bg-sky-50 text-sky-700 border-sky-200'
+              : 'bg-white text-slate-500 border-slate-300 hover:bg-slate-50'
+          }`}
+        >
+          {groupByBasket ? '\u2713 Grouped by Basket' : 'Group by Basket'}
+        </button>
         <span className="text-xs text-slate-400 ml-auto">{filtered.length} of {quotes.length} quotes shown</span>
       </div>
 
@@ -122,44 +158,88 @@ export function QuoteQueue({ quotes, onSelectQuote }: Props) {
               <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Quote Type</th>
               <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">EAC (kWh)</th>
               <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">HH Sites</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">MPANs</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Data Age</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.map((quote) => (
-              <tr
-                key={quote.id}
-                onClick={() => onSelectQuote(quote.id)}
-                className="hover:bg-slate-50 cursor-pointer transition-colors group border-b border-slate-100"
-              >
-                <td className="px-4 py-3.5">
-                  <div className="font-mono text-sm font-semibold text-sky-600 group-hover:text-sky-700 leading-none">{quote.ref}</div>
-                  <div className="text-xs font-medium text-slate-600 mt-1 tracking-wide">{quote.customer}</div>
-                </td>
-                <td className="px-4 py-3.5 text-slate-600">{quote.accountManager}</td>
-                <td className="px-4 py-3.5">
-                  <QuoteTypeBadge type={quote.quoteType} />
-                </td>
-                <td className="px-4 py-3.5 text-right font-mono text-slate-700">
-                  {quote.eac.toLocaleString()}
-                </td>
-                <td className="px-4 py-3.5 text-right text-slate-600">{quote.hhSites}</td>
-                <td className="px-4 py-3.5">
-                  <span className={`inline-flex items-center gap-1.5 text-sm ${quote.dataAge > 30 ? 'text-amber-700 font-semibold' : 'text-slate-600'}`}>
-                    {quote.dataAge > 30 && (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    )}
-                    {quote.dataAge} days
-                  </span>
-                </td>
-                <td className="px-4 py-3.5">
-                  <StatusBadge status={quote.status} />
-                </td>
-              </tr>
-            ))}
+            {(() => {
+              const renderRow = (quote: Quote) => (
+                <tr
+                  key={quote.id}
+                  onClick={() => onSelectQuote(quote.id)}
+                  className="hover:bg-slate-50 cursor-pointer transition-colors group border-b border-slate-100"
+                >
+                  <td className="px-4 py-3.5">
+                    <div className="font-mono text-sm font-semibold text-sky-600 group-hover:text-sky-700 leading-none">{quote.ref}</div>
+                    <div className="text-xs font-medium text-slate-600 mt-1 tracking-wide">{quote.customer}</div>
+                  </td>
+                  <td className="px-4 py-3.5 text-slate-600">{quote.accountManager}</td>
+                  <td className="px-4 py-3.5">
+                    <QuoteTypeBadge type={quote.quoteType} />
+                  </td>
+                  <td className="px-4 py-3.5 text-right font-mono text-slate-700">
+                    {quote.eac.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3.5 text-right text-slate-600">{quote.hhSites}</td>
+                  <td className="px-4 py-3">
+                    <MpanRollupBadge
+                      total={quote.sites.length}
+                      pass={quote.sites.filter(s => s.toleranceResults.every(r => r.result === 'Pass')).length}
+                      fail={quote.sites.filter(s => s.toleranceResults.some(r => r.result === 'Fail')).length}
+                      warn={0}
+                    />
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <span className={`inline-flex items-center gap-1.5 text-sm ${quote.dataAge > 30 ? 'text-amber-700 font-semibold' : 'text-slate-600'}`}>
+                      {quote.dataAge > 30 && (
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      )}
+                      {quote.dataAge} days
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <StatusBadge status={quote.status} />
+                  </td>
+                </tr>
+              );
+
+              if (!groupByBasket) {
+                return filtered.map(renderRow);
+              }
+
+              // Group filtered quotes by basketId
+              const groups = new Map<string, Quote[]>();
+              for (const q of filtered) {
+                const key = q.basketId;
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key)!.push(q);
+              }
+
+              return Array.from(groups.entries()).map(([basketId, groupQuotes]) => {
+                const basket = resolvedBaskets.find(b => b.id === basketId) ?? {
+                  id: basketId,
+                  name: basketId,
+                  submittedDate: '',
+                  status: 'Open' as const,
+                };
+                return (
+                  <BasketGroupHeader
+                    key={basketId}
+                    basket={basket}
+                    itemCount={groupQuotes.length}
+                    totalMpans={groupQuotes.reduce((sum, q) => sum + q.sites.length, 0)}
+                    totalAq={groupQuotes.reduce((sum, q) => sum + q.eac, 0)}
+                    worstStatus={worstStatusOf(groupQuotes)}
+                  >
+                    {groupQuotes.map(renderRow)}
+                  </BasketGroupHeader>
+                );
+              });
+            })()}
           </tbody>
         </table>
         {filtered.length === 0 && (
