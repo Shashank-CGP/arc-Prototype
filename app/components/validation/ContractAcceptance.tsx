@@ -1,21 +1,21 @@
 'use client';
 import { useState } from 'react';
-import { Contract } from '../../data/validationData';
+import { Quote } from '../../data/mockData';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   onBack: () => void;
   onConfirm: () => void;
 }
 
 const ANALYST_NAME = 'Tom Walsh';
 
-export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
+export function ContractAcceptance({ quote, onBack, onConfirm }: Props) {
   const [countersigned, setCountersigned] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [timestamp] = useState(() => new Date().toISOString());
 
-  const storagePath = `/contracts/${contract.contractStart.replace(/\//g, '-')}/${contract.ref}`;
+  const storagePath = `/quotes/${quote.contractStart.replace(/\//g, '-')}/${quote.ref}`;
 
   const handleSign = () => setCountersigned(true);
 
@@ -33,12 +33,12 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold text-slate-900 mb-2">Contract Accepted</h1>
-          <p className="text-slate-500 mb-8">The contract has been countersigned and stored successfully.</p>
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Quote Accepted</h1>
+          <p className="text-slate-500 mb-8">The quote has been countersigned and stored successfully.</p>
           <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 text-left space-y-3 mb-8">
             {[
-              { label: 'Contract Ref', value: contract.ref, mono: true },
-              { label: 'Customer', value: contract.customer },
+              { label: 'Quote Ref', value: quote.ref, mono: true },
+              { label: 'Customer', value: quote.customer },
               { label: 'Countersigned by', value: ANALYST_NAME },
               { label: 'Timestamp', value: new Date(timestamp).toLocaleString('en-GB'), mono: true },
               { label: 'Storage path', value: storagePath, mono: true },
@@ -58,12 +58,13 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
     );
   }
 
+  const vc = quote.validationChecks;
   const checks = [
-    { label: 'Data Integrity', ok: contract.validationChecks.dataIntegrity.status !== 'Fail' },
-    { label: 'Pricing Accuracy', ok: contract.validationChecks.pricingAccuracy.status !== 'Fail' },
-    { label: 'Curve Alignment', ok: contract.validationChecks.curveAlignment.status !== 'Fail' },
-    { label: 'AMP Indicators', ok: contract.validationChecks.ampIndicators.status !== 'Fail' },
-    { label: 'ROI / Credit', ok: contract.validationChecks.roiCredit.status !== 'Fail' || contract.creditApprovalStatus === 'Approved' },
+    { label: 'Data Integrity', ok: vc?.dataIntegrity.status !== 'Fail' },
+    { label: 'Pricing Accuracy', ok: vc?.pricingAccuracy.status !== 'Fail' },
+    { label: 'Curve Alignment', ok: vc?.curveAlignment.status !== 'Fail' },
+    { label: 'AMP Indicators', ok: vc?.ampIndicators.status !== 'Fail' },
+    { label: 'ROI / Credit', ok: vc?.roiCredit.status !== 'Fail' || quote.creditApprovalStatus === 'Approved' },
     { label: 'Signature Readiness', ok: true },
   ];
 
@@ -78,23 +79,23 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
       </button>
 
       <div className="grid grid-cols-3 gap-5">
-        {/* Left — contract summary + checklist */}
+        {/* Left — quote summary + checklist */}
         <div className="col-span-2 space-y-5">
-          {/* Contract summary */}
+          {/* Quote summary */}
           <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Contract Summary</h2>
+            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Quote Summary</h2>
             <div className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
               {[
-                { label: 'Contract Ref', value: contract.ref, mono: true },
-                { label: 'Customer', value: contract.customer },
-                { label: 'Supplier', value: contract.supplier },
-                { label: 'Account Manager', value: contract.accountManager },
-                { label: 'MPAN', value: contract.mpan, mono: true },
-                { label: 'AQ', value: `${contract.aq.toLocaleString()} kWh` },
-                { label: 'Supply Period', value: `${contract.contractStart} – ${contract.contractEnd}` },
-                { label: 'Unit Rate', value: `${contract.unitRate.toFixed(4)}p/kWh` },
-                { label: 'Standing Charge', value: `£${contract.standingCharge.toFixed(2)}/day` },
-                { label: 'ROI', value: `${contract.roi}%` },
+                { label: 'Quote Ref', value: quote.ref, mono: true },
+                { label: 'Customer', value: quote.customer },
+                { label: 'Supplier', value: quote.supplier },
+                { label: 'Account Manager', value: quote.accountManager },
+                { label: 'MPAN', value: quote.mpan, mono: true },
+                { label: 'AQ', value: `${(quote.aq ?? quote.eac).toLocaleString()} kWh` },
+                { label: 'Supply Period', value: `${quote.contractStart} – ${quote.contractEnd}` },
+                { label: 'Unit Rate', value: quote.unitRate != null ? `${quote.unitRate.toFixed(4)}p/kWh` : '—' },
+                { label: 'Standing Charge', value: quote.standingCharge != null ? `£${quote.standingCharge.toFixed(2)}/day` : '—' },
+                { label: 'ROI', value: `${quote.roi}%` },
               ].map(item => (
                 <div key={item.label} className="flex justify-between items-center">
                   <dt className="text-slate-500">{item.label}</dt>
@@ -127,7 +128,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
             </svg>
             <div>
-              <div className="text-xs text-slate-500 font-medium">Contract will be stored to:</div>
+              <div className="text-xs text-slate-500 font-medium">Quote will be stored to:</div>
               <div className="font-mono text-sm text-slate-800 font-semibold">{storagePath}</div>
             </div>
           </div>
@@ -143,7 +144,7 @@ export function ContractAcceptance({ contract, onBack, onConfirm }: Props) {
                 <div className="bg-sky-50 rounded-lg border border-sky-200 p-4 text-center">
                   <div className="text-xs text-slate-500 mb-2">Signing as</div>
                   <div className="text-base font-bold text-slate-900">{ANALYST_NAME}</div>
-                  <div className="text-xs text-slate-400 mt-0.5">Contract Services</div>
+                  <div className="text-xs text-slate-400 mt-0.5">Quote Services</div>
                 </div>
                 <div className="border-2 border-dashed border-sky-200 rounded-lg bg-sky-50 p-6 text-center">
                   <div className="text-slate-300 text-4xl font-serif italic mb-1">{ANALYST_NAME}</div>

@@ -214,7 +214,7 @@ export function QuoteQueue({ quotes, onSelectQuote, baskets }: Props) {
               // Group filtered quotes by basketId
               const groups = new Map<string, Quote[]>();
               for (const q of filtered) {
-                const key = q.basketId;
+                const key = q.basketId ?? 'ungrouped';
                 if (!groups.has(key)) groups.set(key, []);
                 groups.get(key)!.push(q);
               }

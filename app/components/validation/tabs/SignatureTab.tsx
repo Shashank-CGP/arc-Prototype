@@ -1,14 +1,14 @@
 'use client';
 import { useState } from 'react';
-import { Contract } from '../../../data/validationData';
+import { Quote } from '../../../data/mockData';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   onVerified: () => void;
   isVerified: boolean;
 }
 
-export function SignatureTab({ contract, onVerified, isVerified }: Props) {
+export function SignatureTab({ quote, onVerified, isVerified }: Props) {
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<'none' | 'match' | 'no-match'>('none');
   const [contractMode, setContractMode] = useState<'econtract' | 'pdf'>('econtract');
@@ -16,9 +16,9 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
   const [notes, setNotes] = useState('');
   const [actionTaken, setActionTaken] = useState<'none' | 'accepted' | 'rejected' | 'info'>('none');
 
-  const { directors } = contract.companiesHouse;
+  const directors = quote.companiesHouse?.directors ?? [];
   const matchedDirector = directors.find(
-    d => d.name.toLowerCase() === contract.signatoryName.toLowerCase()
+    d => d.name.toLowerCase() === (quote.signatoryName ?? '').toLowerCase()
   );
 
   const handleVerify = () => {
@@ -42,9 +42,9 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
         <div className="p-5 grid grid-cols-2 gap-6">
           <div className="space-y-3">
             {[
-              { label: 'Company Name', value: contract.companiesHouse.companyName },
-              { label: 'Company Number', value: contract.companiesHouse.companyNumber, mono: true },
-              { label: 'Registered Address', value: contract.companiesHouse.registeredAddress },
+              { label: 'Company Name', value: quote.companiesHouse?.companyName ?? '' },
+              { label: 'Company Number', value: quote.companiesHouse?.companyNumber ?? '', mono: true },
+              { label: 'Registered Address', value: quote.companiesHouse?.registeredAddress ?? '' },
             ].map(item => (
               <div key={item.label}>
                 <div className="text-xs text-slate-500 font-medium mb-0.5">{item.label}</div>
@@ -75,7 +75,7 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs text-slate-500 font-medium mb-0.5">Contract Signatory</div>
-              <div className="text-base font-bold text-slate-900">{contract.signatoryName}</div>
+              <div className="text-base font-bold text-slate-900">{quote.signatoryName}</div>
             </div>
             {verifyResult === 'none' && (
               <button onClick={handleVerify} disabled={verifying}
@@ -92,7 +92,7 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
             {verifyResult === 'match' && (
               <div className="flex items-center gap-2 text-green-700">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                <span className="text-sm font-bold">{contract.signatoryName} — confirmed Director</span>
+                <span className="text-sm font-bold">{quote.signatoryName} — confirmed Director</span>
               </div>
             )}
             {verifyResult === 'no-match' && (
@@ -127,17 +127,17 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
                 <div className="text-center font-bold text-sm text-slate-900 mb-4 uppercase tracking-wider">
                   Power Supply Agreement
                 </div>
-                <div className="mb-2">This agreement is entered into between <strong>Engie UK Ltd</strong> and <strong>{contract.customer}</strong>.</div>
-                <div className="mb-2">MPAN: {contract.mpan} &nbsp;|&nbsp; Supply period: {contract.contractStart} – {contract.contractEnd}</div>
-                <div className="mb-4">Unit Rate: {contract.unitRate}p/kWh &nbsp;|&nbsp; Standing Charge: £{contract.standingCharge.toFixed(2)}/day</div>
+                <div className="mb-2">This agreement is entered into between <strong>Engie UK Ltd</strong> and <strong>{quote.customer}</strong>.</div>
+                <div className="mb-2">MPAN: {quote.mpan} &nbsp;|&nbsp; Supply period: {quote.contractStart} – {quote.contractEnd}</div>
+                <div className="mb-4">Unit Rate: {quote.unitRate}p/kWh &nbsp;|&nbsp; Standing Charge: £{(quote.standingCharge ?? 0).toFixed(2)}/day</div>
                 <div className="mt-4 pt-4 border-t border-slate-300 flex justify-between">
                   <div>
                     <div className="text-slate-500 mb-1">Signed by customer:</div>
-                    <div className="italic text-slate-900 text-base font-serif">{contract.signatoryName}</div>
+                    <div className="italic text-slate-900 text-base font-serif">{quote.signatoryName}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-slate-500 mb-1">Date:</div>
-                    <div>{contract.submissionDate}</div>
+                    <div>{quote.contractStart}</div>
                   </div>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
                   <div className="text-sm font-semibold text-slate-800">Contract PDF</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{contract.ref}_signed.pdf</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{quote.ref}_signed.pdf</div>
                 </div>
                 <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -197,7 +197,7 @@ export function SignatureTab({ contract, onVerified, isVerified }: Props) {
                 <input type="checkbox" checked={pdfConfirmed} onChange={e => { setPdfConfirmed(e.target.checked); if (e.target.checked) onVerified(); }}
                   className="mt-0.5 w-4 h-4 accent-green-600" />
                 <span className="text-sm text-slate-700">
-                  I confirm I have reviewed the signed PDF and the signature matches the authorised signatory — <span className="font-semibold">{contract.signatoryName}</span>.
+                  I confirm I have reviewed the signed PDF and the signature matches the authorised signatory — <span className="font-semibold">{quote.signatoryName}</span>.
                 </span>
               </label>
             </div>

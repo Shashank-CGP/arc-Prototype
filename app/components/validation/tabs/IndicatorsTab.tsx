@@ -1,14 +1,14 @@
 'use client';
-import { Contract } from '../../../data/validationData';
+import { Quote } from '../../../data/mockData';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   onMarkReviewed: () => void;
   reviewed: boolean;
 }
 
-export function IndicatorsTab({ contract, onMarkReviewed, reviewed }: Props) {
-  const hasIssues = contract.ampIndicators.length > 0;
+export function IndicatorsTab({ quote, onMarkReviewed, reviewed }: Props) {
+  const hasIssues = (quote.ampIndicators ?? []).length > 0;
 
   return (
     <div className="space-y-5">
@@ -25,7 +25,7 @@ export function IndicatorsTab({ contract, onMarkReviewed, reviewed }: Props) {
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {contract.ampIndicators.map(ind => (
+            {(quote.ampIndicators ?? []).map(ind => (
               <div key={ind.id} className={`flex items-start gap-4 px-5 py-4 ${ind.severity === 'red' ? 'bg-red-50' : 'bg-amber-50'}`}>
                 <div className={`mt-1 w-3 h-3 rounded-full shrink-0 ${ind.severity === 'red' ? 'bg-red-500' : 'bg-amber-400'}`} />
                 <div className="flex-1">
@@ -48,9 +48,9 @@ export function IndicatorsTab({ contract, onMarkReviewed, reviewed }: Props) {
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Site Reference Check</h3>
         <div className="grid grid-cols-3 gap-4 text-sm">
           {[
-            { label: 'MPAN', value: contract.mpan, ok: true },
-            { label: 'Contract Start', value: contract.contractStart, ok: !contract.ampIndicators.some(a => a.id === 'amp2') },
-            { label: 'Supply Overlap', value: 'None detected', ok: !contract.ampIndicators.some(a => a.label.includes('overlap')) },
+            { label: 'MPAN', value: quote.mpan, ok: true },
+            { label: 'Contract Start', value: quote.contractStart, ok: !(quote.ampIndicators ?? []).some(a => a.id === 'amp2') },
+            { label: 'Supply Overlap', value: 'None detected', ok: !(quote.ampIndicators ?? []).some(a => a.label.includes('overlap')) },
           ].map(item => (
             <div key={item.label} className={`rounded-lg p-4 border ${item.ok ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
               <div className="text-xs text-slate-500 font-medium mb-1">{item.label}</div>

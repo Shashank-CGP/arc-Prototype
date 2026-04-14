@@ -1,12 +1,13 @@
 'use client';
-import { MpanSite, ValidationResult } from '../../../data/validationData';
+import { Site } from '../../../data/mockData';
+import { ValidationResult } from '../../../data/validationData';
 
-export type MpanStatusFn = (site: MpanSite) => ValidationResult;
+export type MpanStatusFn = (site: Site) => ValidationResult;
 
 // ─── Summary bar ──────────────────────────────────────────────────
 
 interface SummaryBarProps {
-  sites: MpanSite[];
+  sites: Site[];
   getStatus: MpanStatusFn;
   verifiedSet: Set<string>;
   onReviewAll?: () => void;
@@ -101,7 +102,7 @@ export function MpanSummaryBar({ sites, getStatus, verifiedSet, onReviewAll }: S
 // ─── MPAN dropdown selector ───────────────────────────────────────
 
 interface DropdownProps {
-  sites: MpanSite[];
+  sites: Site[];
   activeMpan: string;
   onSelect: (mpan: string) => void;
   getStatus: MpanStatusFn;

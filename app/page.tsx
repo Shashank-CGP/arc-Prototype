@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { initialQuotes, Quote, QuoteStatus } from './data/mockData';
-import { initialContracts, Contract, initialBaskets, Basket } from './data/validationData';
+import { initialBaskets, Basket } from './data/validationData';
 import { Sidebar } from './components/Sidebar';
 import { QuoteQueue } from './components/QuoteQueue';
 import { QuoteDetail } from './components/QuoteDetail';
@@ -19,8 +19,8 @@ type Screen =
   | { type: 'site'; quoteId: string; siteIndex: number }
   | { type: 'config' }
   | { type: 'validation-queue' }
-  | { type: 'validation-detail'; contractId: string }
-  | { type: 'contract-acceptance'; contractId: string }
+  | { type: 'validation-detail'; quoteId: string }
+  | { type: 'contract-acceptance'; quoteId: string }
   | { type: 'graph-validation' };
 
 interface ModalState {
@@ -37,7 +37,6 @@ interface Toast {
 
 export default function Home() {
   const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
-  const [contracts, setContracts] = useState<Contract[]>(initialContracts);
   const [screen, setScreen] = useState<Screen>({ type: 'queue' });
   const [modal, setModal] = useState<ModalState>({ open: false, mode: 'approve', quoteId: null });
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -107,45 +106,37 @@ export default function Home() {
     return null;
   })();
 
-  const selectedContract = (() => {
+  const selectedValidationQuote = (() => {
     if (screen.type === 'validation-detail' || screen.type === 'contract-acceptance') {
-      return contracts.find((c) => c.id === screen.contractId) ?? null;
+      return quotes.find((q) => q.id === (screen as any).quoteId) ?? null;
     }
     return null;
   })();
 
-  const updateContractStatus = (id: string, status: Contract['status']) => {
-    setContracts((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
+  const updateValidationQuoteStatus = (id: string, status: QuoteStatus) => {
+    setQuotes((prev) => prev.map((q) => (q.id === id ? { ...q, status } : q)));
   };
 
-  const getBasketContext = (basketId: string) => {
+  const getBasketContext = (basketId?: string) => {
+    if (!basketId) return { basket: undefined, siblings: [] };
     const basket = initialBaskets.find(b => b.id === basketId);
     if (!basket) return { basket: undefined, siblings: [] };
-
-    const siblingQuotes = quotes
+    const siblings = quotes
       .filter(q => q.basketId === basketId)
       .map(q => ({ id: q.id, ref: q.ref, type: 'quote' as const, status: q.status }));
-
-    const siblingContracts = contracts
-      .filter(c => c.basketId === basketId)
-      .map(c => ({ id: c.id, ref: c.ref, type: 'contract' as const, status: c.status }));
-
-    return {
-      basket,
-      siblings: [...siblingQuotes, ...siblingContracts],
-    };
+    return { basket, siblings };
   };
 
   const handleNavigateToSibling = (type: 'quote' | 'contract', id: string) => {
     if (type === 'quote') {
       setScreen({ type: 'detail', quoteId: id });
     } else {
-      setScreen({ type: 'validation-detail', contractId: id });
+      setScreen({ type: 'validation-detail', quoteId: id });
     }
   };
 
   const quoteBasketCtx = selectedQuote ? getBasketContext(selectedQuote.basketId) : null;
-  const contractBasketCtx = selectedContract ? getBasketContext(selectedContract.basketId) : null;
+  const validationBasketCtx = selectedValidationQuote ? getBasketContext(selectedValidationQuote.basketId) : null;
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
@@ -195,31 +186,31 @@ export default function Home() {
 
         {screen.type === 'validation-queue' && (
           <ValidationQueue
-            contracts={contracts}
-            onSelect={(id) => setScreen({ type: 'validation-detail', contractId: id })}
+            quotes={quotes}
+            onSelect={(id) => setScreen({ type: 'validation-detail', quoteId: id })}
           />
         )}
 
-        {screen.type === 'validation-detail' && selectedContract && (
+        {screen.type === 'validation-detail' && selectedValidationQuote && (
           <ValidationDetail
-            contract={selectedContract}
+            quote={selectedValidationQuote}
             onBack={() => setScreen({ type: 'validation-queue' })}
             onProceedToAcceptance={() =>
-              setScreen({ type: 'contract-acceptance', contractId: selectedContract.id })
+              setScreen({ type: 'contract-acceptance', quoteId: selectedValidationQuote.id })
             }
-            onUpdateStatus={(status) => updateContractStatus(selectedContract.id, status)}
-            basket={contractBasketCtx?.basket}
-            siblingRefs={contractBasketCtx?.siblings}
+            onUpdateStatus={(status) => updateValidationQuoteStatus(selectedValidationQuote.id, status)}
+            basket={validationBasketCtx?.basket}
+            siblingRefs={validationBasketCtx?.siblings}
             onNavigateToSibling={handleNavigateToSibling}
           />
         )}
 
-        {screen.type === 'contract-acceptance' && selectedContract && (
+        {screen.type === 'contract-acceptance' && selectedValidationQuote && (
           <ContractAcceptance
-            contract={selectedContract}
-            onBack={() => setScreen({ type: 'validation-detail', contractId: selectedContract.id })}
+            quote={selectedValidationQuote}
+            onBack={() => setScreen({ type: 'validation-detail', quoteId: selectedValidationQuote.id })}
             onConfirm={() => {
-              updateContractStatus(selectedContract.id, 'Accepted');
+              updateValidationQuoteStatus(selectedValidationQuote.id, 'Accepted');
             }}
           />
         )}

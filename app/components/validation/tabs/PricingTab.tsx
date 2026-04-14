@@ -1,18 +1,19 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { Contract, PricingRow, MpanSite, buildMpanContract, ValidationResult } from '../../../data/validationData';
+import { Quote, Site, buildSiteQuote } from '../../../data/mockData';
+import { PricingRow, ValidationResult } from '../../../data/validationData';
 import { MpanSummaryBar, MpanSubTabBar } from './MpanSubTabs';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   onMarkVerified: () => void;
   verified: boolean;
 }
 
 // ─── Per-MPAN status derivation ───────────────────────────────────
 
-export function getMpanPricingStatus(site: MpanSite): ValidationResult {
-  const allRows = [...site.pricingRows, ...site.standingRows];
+export function getMpanPricingStatus(site: Site): ValidationResult {
+  const allRows = [...(site.pricingRows ?? []), ...(site.standingRows ?? [])];
   const hasAnomaly = allRows.some(r => {
     if (r.warnIfZero && r.value === 0) return true;
     if (r.anomalyRange) return r.value > r.anomalyRange.max || (r.value < r.anomalyRange.min && r.value !== 0);
@@ -138,36 +139,36 @@ function EditableTable({
 // ─── Single-site pricing content ──────────────────────────────────
 
 interface ContentProps {
-  contract: Contract;
+  quote: Quote;
   onMarkVerified: () => void;
   verified: boolean;
   mpanLabel?: string;
 }
 
-function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: ContentProps) {
+function PricingContent({ quote, onMarkVerified, verified, mpanLabel }: ContentProps) {
   const [unitValues, setUnitValues]       = useState<Record<string, number>>(
-    () => Object.fromEntries(contract.pricingRows.map(r => [r.id, r.value]))
+    () => Object.fromEntries((quote.pricingRows ?? []).map(r => [r.id, r.value]))
   );
   const [standingValues, setStandingValues] = useState<Record<string, number>>(
-    () => Object.fromEntries(contract.standingRows.map(r => [r.id, r.value]))
+    () => Object.fromEntries((quote.standingRows ?? []).map(r => [r.id, r.value]))
   );
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveReason, setSaveReason]       = useState('');
 
   const unitTotal  = useMemo(() => Object.values(unitValues).reduce((a, b) => a + b, 0), [unitValues]);
   const standTotal = useMemo(() => Object.values(standingValues).reduce((a, b) => a + b, 0), [standingValues]);
-  const unitVariance  = unitTotal - contract.unitRate;
-  const standVariance = standTotal - contract.standingCharge;
+  const unitVariance  = unitTotal - (quote.unitRate ?? 0);
+  const standVariance = standTotal - (quote.standingCharge ?? 0);
   const unitOk  = Math.abs(unitVariance) < 0.0001;
   const standOk = Math.abs(standVariance) < 0.0001;
 
-  const unitAnomalies  = contract.pricingRows.filter(r => getAnomaly(r, unitValues[r.id] ?? r.value).level !== 'ok');
-  const standAnomalies = contract.standingRows.filter(r => getAnomaly(r, standingValues[r.id] ?? r.value).level !== 'ok');
+  const unitAnomalies  = (quote.pricingRows ?? []).filter(r => getAnomaly(r, unitValues[r.id] ?? r.value).level !== 'ok');
+  const standAnomalies = (quote.standingRows ?? []).filter(r => getAnomaly(r, standingValues[r.id] ?? r.value).level !== 'ok');
   const allAnomalies   = [...unitAnomalies, ...standAnomalies];
 
   const handleReset = () => {
-    setUnitValues(Object.fromEntries(contract.pricingRows.map(r => [r.id, r.value])));
-    setStandingValues(Object.fromEntries(contract.standingRows.map(r => [r.id, r.value])));
+    setUnitValues(Object.fromEntries((quote.pricingRows ?? []).map(r => [r.id, r.value])));
+    setStandingValues(Object.fromEntries((quote.standingRows ?? []).map(r => [r.id, r.value])));
   };
 
   return (
@@ -178,7 +179,7 @@ function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: Conte
           <div className="pr-5 flex items-center justify-between">
             <div>
               <div className="text-xs text-slate-500 font-medium">Contract Unit Rate{mpanLabel && <span className="ml-1 font-mono text-slate-400">({mpanLabel})</span>}</div>
-              <div className="text-base font-bold text-slate-900 font-mono">{contract.unitRate.toFixed(4)}p/kWh</div>
+              <div className="text-base font-bold text-slate-900 font-mono">{(quote.unitRate ?? 0).toFixed(4)}p/kWh</div>
             </div>
             <div className="text-center">
               <div className="text-xs text-slate-500 font-medium">Calculated Total</div>
@@ -197,7 +198,7 @@ function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: Conte
           <div className="pl-5 flex items-center justify-between">
             <div>
               <div className="text-xs text-slate-500 font-medium">Contract Standing Charge</div>
-              <div className="text-base font-bold text-slate-900 font-mono">£{contract.standingCharge.toFixed(2)}/day</div>
+              <div className="text-base font-bold text-slate-900 font-mono">£{(quote.standingCharge ?? 0).toFixed(2)}/day</div>
             </div>
             <div className="text-center">
               <div className="text-xs text-slate-500 font-medium">Calculated Total</div>
@@ -247,12 +248,12 @@ function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: Conte
         </div>
       )}
 
-      <EditableTable rows={contract.pricingRows} values={unitValues}
+      <EditableTable rows={quote.pricingRows ?? []} values={unitValues}
         onChange={(id, v) => setUnitValues(prev => ({ ...prev, [id]: v }))}
-        title="Unit Rate Components" contractTotal={contract.unitRate} unitLabel="p/kWh" disabled={verified} />
-      <EditableTable rows={contract.standingRows} values={standingValues}
+        title="Unit Rate Components" contractTotal={quote.unitRate ?? 0} unitLabel="p/kWh" disabled={verified} />
+      <EditableTable rows={quote.standingRows ?? []} values={standingValues}
         onChange={(id, v) => setStandingValues(prev => ({ ...prev, [id]: v }))}
-        title="Standing Charge Components" contractTotal={contract.standingCharge} unitLabel="£/day" disabled={verified} />
+        title="Standing Charge Components" contractTotal={quote.standingCharge ?? 0} unitLabel="£/day" disabled={verified} />
 
       {/* Action bar */}
       <div className="flex items-center justify-between pt-1">
@@ -303,24 +304,24 @@ function PricingContent({ contract, onMarkVerified, verified, mpanLabel }: Conte
 
 // ─── Main export ──────────────────────────────────────────────────
 
-export function PricingTab({ contract, onMarkVerified, verified }: Props) {
-  const isMulti = (contract.mpans?.length ?? 0) > 1;
+export function PricingTab({ quote, onMarkVerified, verified }: Props) {
+  const isMulti = quote.sites.length > 1;
 
-  const [activeMpan, setActiveMpan]       = useState(contract.mpans?.[0]?.mpan ?? contract.mpan);
+  const [activeMpan, setActiveMpan]       = useState(quote.sites[0]?.mpan ?? quote.mpan ?? '');
   const [reviewedMpans, setReviewedMpans] = useState<Set<string>>(() => {
     if (!isMulti) return new Set<string>();
     return new Set(
-      (contract.mpans ?? [])
+      quote.sites
         .filter(s => getMpanPricingStatus(s) === 'Pass')
         .map(s => s.mpan)
     );
   });
 
   if (!isMulti) {
-    return <PricingContent contract={contract} onMarkVerified={onMarkVerified} verified={verified} />;
+    return <PricingContent quote={quote} onMarkVerified={onMarkVerified} verified={verified} />;
   }
 
-  const sites = contract.mpans!;
+  const sites = quote.sites;
 
   const handleMpanVerified = (mpan: string) => {
     setReviewedMpans(prev => {
@@ -337,7 +338,7 @@ export function PricingTab({ contract, onMarkVerified, verified }: Props) {
   };
 
   const activeSite       = sites.find(s => s.mpan === activeMpan)!;
-  const mpanContract     = buildMpanContract(contract, activeSite);
+  const siteQuote        = buildSiteQuote(quote, activeSite);
   const isActiveVerified = reviewedMpans.has(activeMpan);
 
   return (
@@ -345,7 +346,7 @@ export function PricingTab({ contract, onMarkVerified, verified }: Props) {
       <MpanSummaryBar sites={sites} getStatus={getMpanPricingStatus} verifiedSet={reviewedMpans} onReviewAll={handleReviewAll} />
       <MpanSubTabBar  sites={sites} activeMpan={activeMpan} onSelect={setActiveMpan} getStatus={getMpanPricingStatus} verifiedSet={reviewedMpans} />
       <PricingContent
-        contract={mpanContract}
+        quote={siteQuote}
         onMarkVerified={() => handleMpanVerified(activeMpan)}
         verified={isActiveVerified}
         mpanLabel={activeMpan}

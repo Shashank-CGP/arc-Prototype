@@ -167,7 +167,7 @@ export function buildMpanContract(base: Contract, site: MpanSite): Contract {
 
 // ─── Curve helpers ────────────────────────────────────────────────
 
-function makeCurve(baseRate: number, mismatch: boolean): CurvePoint[] {
+export function makeCurve(baseRate: number, mismatch: boolean): CurvePoint[] {
   let seed = 42;
   const rand = () => {
     seed = (seed * 1664525 + 1013904223) & 0xffffffff;
@@ -191,7 +191,7 @@ function makeCurve(baseRate: number, mismatch: boolean): CurvePoint[] {
 
 // ─── Unit-rate components (from brief) ────────────────────────────
 
-const BASE_PRICING_ROWS: PricingRow[] = [
+export const BASE_PRICING_ROWS: PricingRow[] = [
   { id: 'wholesale',   name: 'Wholesale Energy',   value: 13.2119, anomalyRange: { min: 10, max: 16 } },
   { id: 'risk',        name: 'Risk Premium',        value: 0.3218,  anomalyRange: { min: 0.1, max: 0.6 } },
   { id: 'duos',        name: 'DUoS Variable',       value: 2.5132,  anomalyRange: { min: 1.5, max: 3.5 } },
@@ -207,7 +207,7 @@ const BASE_PRICING_ROWS: PricingRow[] = [
   { id: 'tc',          name: 'Transaction Cost',    value: 0.1427,  anomalyRange: { min: 0.05, max: 0.2 } },
 ];
 
-const BASE_STANDING_ROWS: PricingRow[] = [
+export const BASE_STANDING_ROWS: PricingRow[] = [
   { id: 'duos_fixed',  name: 'DUoS Fixed',          value: 0.17 },
   { id: 'tnuos_fixed', name: 'TNUoS Fixed',          value: 0.24 },
   { id: 'map',         name: 'Metering (MAP)',        value: 0.37 },
@@ -217,7 +217,7 @@ const BASE_STANDING_ROWS: PricingRow[] = [
 ];
 
 // Standing rows for the mismatch contract — standing charge variance
-const MISMATCH_STANDING_ROWS: PricingRow[] = [
+export const MISMATCH_STANDING_ROWS: PricingRow[] = [
   { id: 'duos_fixed',  name: 'DUoS Fixed',          value: 0.17 },
   { id: 'tnuos_fixed', name: 'TNUoS Fixed',          value: 0.24 },
   { id: 'map',         name: 'Metering (MAP)',        value: 0.51, anomalyRange: { min: 0.30, max: 0.45 } },

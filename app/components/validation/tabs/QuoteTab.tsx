@@ -1,22 +1,23 @@
 'use client';
 import { useState } from 'react';
-import { Contract, MpanSite, buildMpanContract, ValidationResult } from '../../../data/validationData';
+import { Quote, Site, buildSiteQuote } from '../../../data/mockData';
+import { ValidationResult } from '../../../data/validationData';
 import { CurveTab } from './CurveTab';
 import { IndicatorsTab } from './IndicatorsTab';
 import { MpanSummaryBar, MpanSubTabBar } from './MpanSubTabs';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   onMarkVerified: () => void;
   verified: boolean;
 }
 
 // ─── Per-MPAN status derivation ───────────────────────────────────
 
-export function getMpanQuoteStatus(site: MpanSite): ValidationResult {
-  const curveMismatch = site.curveName !== site.currentCurveName;
-  const redAmp        = site.ampIndicators.some(a => a.severity === 'red');
-  const amberAmp      = site.ampIndicators.some(a => a.severity === 'amber');
+export function getMpanQuoteStatus(site: Site): ValidationResult {
+  const curveMismatch = (site.curveName ?? '') !== (site.currentCurveName ?? '');
+  const redAmp        = (site.ampIndicators ?? []).some(a => a.severity === 'red');
+  const amberAmp      = (site.ampIndicators ?? []).some(a => a.severity === 'amber');
   if (curveMismatch || redAmp) return 'Fail';
   if (amberAmp)                return 'Warning';
   return 'Pass';
@@ -25,14 +26,14 @@ export function getMpanQuoteStatus(site: MpanSite): ValidationResult {
 // ─── Single-site content (existing QuoteTab body) ─────────────────
 
 interface SingleProps {
-  contract: Contract;
+  quote: Quote;
   onMarkVerified: () => void;
   verified: boolean;
   curveInitial: boolean;
   indicatorsInitial: boolean;
 }
 
-function SingleSiteQuote({ contract, onMarkVerified, verified, curveInitial, indicatorsInitial }: SingleProps) {
+function SingleSiteQuote({ quote, onMarkVerified, verified, curveInitial, indicatorsInitial }: SingleProps) {
   const [curveVerified, setCurveVerified]           = useState(curveInitial);
   const [indicatorsVerified, setIndicatorsVerified] = useState(indicatorsInitial);
 
@@ -67,7 +68,7 @@ function SingleSiteQuote({ contract, onMarkVerified, verified, curveInitial, ind
           </span>
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Curve Alignment</h3>
         </div>
-        <CurveTab contract={contract} onMarkVerified={handleCurveVerified} verified={curveVerified} onReferToTrading={() => {}} />
+        <CurveTab quote={quote} onMarkVerified={handleCurveVerified} verified={curveVerified} onReferToTrading={() => {}} />
       </section>
 
       <div className="border-t border-slate-200" />
@@ -79,7 +80,7 @@ function SingleSiteQuote({ contract, onMarkVerified, verified, curveInitial, ind
           </span>
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">AMP Indicators</h3>
         </div>
-        <IndicatorsTab contract={contract} onMarkReviewed={handleIndicatorsVerified} reviewed={indicatorsVerified} />
+        <IndicatorsTab quote={quote} onMarkReviewed={handleIndicatorsVerified} reviewed={indicatorsVerified} />
       </section>
     </div>
   );
@@ -89,15 +90,15 @@ function SingleSiteQuote({ contract, onMarkVerified, verified, curveInitial, ind
 
 type MpanVerification = { curve: boolean; indicators: boolean };
 
-function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, never>) {
-  const sites = contract.mpans!;
+function MultiSiteQuote({ quote, onMarkVerified, verified }: Omit<Props, never>) {
+  const sites = quote.sites;
 
   // Track curve + indicators verification independently per MPAN
   const [mpanVerif, setMpanVerif] = useState<Record<string, MpanVerification>>(() => {
     const init: Record<string, MpanVerification> = {};
     sites.forEach(s => {
-      const curveOk      = s.curveName === s.currentCurveName;
-      const indicatorsOk = s.ampIndicators.length === 0;
+      const curveOk      = (s.curveName ?? '') === (s.currentCurveName ?? '');
+      const indicatorsOk = (s.ampIndicators ?? []).length === 0;
       init[s.mpan] = { curve: curveOk, indicators: indicatorsOk };
     });
     return init;
@@ -127,7 +128,7 @@ function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, neve
   const [activeMpan, setActiveMpan] = useState(sites[0].mpan);
 
   const activeSite    = sites.find(s => s.mpan === activeMpan)!;
-  const mpanContract  = buildMpanContract(contract, activeSite);
+  const siteQuote     = buildSiteQuote(quote, activeSite);
   const curveVerif    = mpanVerif[activeMpan]?.curve      ?? false;
   const indVerif      = mpanVerif[activeMpan]?.indicators ?? false;
 
@@ -145,7 +146,7 @@ function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, neve
               Quote Review — <span className="font-mono text-sky-600">{activeMpan}</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {activeSite.siteRef} · AQ {activeSite.aq.toLocaleString()} kWh · Both sections must be verified
+              {activeSite.siteRef} · AQ {(activeSite.aq ?? 0).toLocaleString()} kWh · Both sections must be verified
             </p>
           </div>
           {isMpanFullyVerified(activeMpan) && (
@@ -167,7 +168,7 @@ function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, neve
           {/* Key to remount CurveTab when MPAN changes so internal referral state resets */}
           <CurveTab
             key={`curve-${activeMpan}`}
-            contract={mpanContract}
+            quote={siteQuote}
             onMarkVerified={() => updateVerif(activeMpan, 'curve')}
             verified={curveVerif}
             onReferToTrading={() => {}}
@@ -186,7 +187,7 @@ function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, neve
           </div>
           <IndicatorsTab
             key={`ind-${activeMpan}`}
-            contract={mpanContract}
+            quote={siteQuote}
             onMarkReviewed={() => updateVerif(activeMpan, 'indicators')}
             reviewed={indVerif}
           />
@@ -198,18 +199,18 @@ function MultiSiteQuote({ contract, onMarkVerified, verified }: Omit<Props, neve
 
 // ─── Main export ──────────────────────────────────────────────────
 
-export function QuoteTab({ contract, onMarkVerified, verified }: Props) {
-  if ((contract.mpans?.length ?? 0) > 1) {
-    return <MultiSiteQuote contract={contract} onMarkVerified={onMarkVerified} verified={verified} />;
+export function QuoteTab({ quote, onMarkVerified, verified }: Props) {
+  if (quote.sites.length > 1) {
+    return <MultiSiteQuote quote={quote} onMarkVerified={onMarkVerified} verified={verified} />;
   }
 
   return (
     <SingleSiteQuote
-      contract={contract}
+      quote={quote}
       onMarkVerified={onMarkVerified}
       verified={verified}
-      curveInitial={contract.validationChecks.curveAlignment.status === 'Pass'}
-      indicatorsInitial={contract.validationChecks.ampIndicators.status === 'Pass'}
+      curveInitial={quote.validationChecks?.curveAlignment.status === 'Pass'}
+      indicatorsInitial={quote.validationChecks?.ampIndicators.status === 'Pass'}
     />
   );
 }

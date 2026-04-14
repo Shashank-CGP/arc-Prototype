@@ -8,6 +8,7 @@ const config: Record<QuoteStatus, { label: string; className: string }> = {
   'Pending':       { label: 'Pending',       className: 'bg-slate-100 text-slate-600 border border-slate-200' },
   'Rejected':      { label: 'Rejected',      className: 'bg-red-100 text-red-700 border border-red-200' },
   'Escalated':     { label: 'Escalated',     className: 'bg-purple-100 text-purple-700 border border-purple-200' },
+  'Accepted':      { label: 'Accepted',      className: 'bg-sky-100 text-sky-700 border border-sky-200' },
 };
 
 export function StatusBadge({ status }: { status: QuoteStatus }) {

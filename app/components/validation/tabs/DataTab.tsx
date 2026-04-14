@@ -1,21 +1,22 @@
 'use client';
 import { useState } from 'react';
-import { Contract, DataCheck, AmpIndicator, ValidationResult, MpanSite, buildMpanContract } from '../../../data/validationData';
+import { Quote, Site, buildSiteQuote } from '../../../data/mockData';
+import { DataCheck, AmpIndicator, ValidationResult } from '../../../data/validationData';
 import { MpanSummaryBar, MpanSubTabBar, MpanStatusFn } from './MpanSubTabs';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   onMarkReviewed: () => void;
   reviewed: boolean;
 }
 
 // ─── Per-MPAN status derivation ───────────────────────────────────
 
-export function getMpanDataStatus(site: MpanSite): ValidationResult {
-  if (site.ampIndicators.some(a => a.severity === 'red'))   return 'Fail';
-  if (site.dataChecks.some(c => c.status === 'Fail'))        return 'Fail';
-  if (site.ampIndicators.some(a => a.severity === 'amber')) return 'Warning';
-  if (site.dataChecks.some(c => c.status === 'Warning'))     return 'Warning';
+export function getMpanDataStatus(site: Site): ValidationResult {
+  if ((site.ampIndicators ?? []).some(a => a.severity === 'red'))   return 'Fail';
+  if ((site.dataChecks ?? []).some(c => c.status === 'Fail'))        return 'Fail';
+  if ((site.ampIndicators ?? []).some(a => a.severity === 'amber')) return 'Warning';
+  if ((site.dataChecks ?? []).some(c => c.status === 'Warning'))     return 'Warning';
   return 'Pass';
 }
 
@@ -45,14 +46,14 @@ function ResultBadge({ status }: { status: ValidationResult }) {
 // ─── Single-site content (reused for both single and multi paths) ─
 
 interface ContentProps {
-  contract: Contract;
+  quote: Quote;
   onMarkReviewed: () => void;
   reviewed: boolean;
   mpanLabel?: string;
 }
 
-function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentProps) {
-  const hasAmps = contract.ampIndicators.length > 0;
+function DataContent({ quote, onMarkReviewed, reviewed, mpanLabel }: ContentProps) {
+  const hasAmps = (quote.ampIndicators ?? []).length > 0;
 
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,7 +64,7 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
   const effectiveStatus = (check: DataCheck): ValidationResult =>
     check.id in amendments ? 'Pass' : check.status;
 
-  const allPass = contract.dataChecks.every(c => effectiveStatus(c) === 'Pass') && !hasAmps;
+  const allPass = (quote.dataChecks ?? []).every(c => effectiveStatus(c) === 'Pass') && !hasAmps;
 
   const startEdit = (check: DataCheck) => {
     setEditingId(check.id);
@@ -84,7 +85,7 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
             Data Integrity Checks{mpanLabel && <span className="ml-2 font-mono text-slate-500 normal-case font-normal text-xs">— {mpanLabel}</span>}
           </h2>
           <span className="text-xs text-slate-400">
-            {contract.dataChecks.filter(c => effectiveStatus(c) === 'Pass').length} of {contract.dataChecks.length} passed
+            {(quote.dataChecks ?? []).filter(c => effectiveStatus(c) === 'Pass').length} of {(quote.dataChecks ?? []).length} passed
           </span>
         </div>
         <table className="w-full text-sm">
@@ -98,7 +99,7 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {contract.dataChecks.map(check => {
+            {(quote.dataChecks ?? []).map(check => {
               const effStatus = effectiveStatus(check);
               const isEditing  = editingId === check.id;
               const isAmended  = check.id in amendments;
@@ -192,7 +193,7 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
         </div>
         {hasAmps ? (
           <div className="divide-y divide-slate-100">
-            {contract.ampIndicators.map(ind => (
+            {(quote.ampIndicators ?? []).map(ind => (
               <div key={ind.id} className={`flex items-start gap-4 px-5 py-4 ${ind.severity === 'red' ? 'bg-red-50' : 'bg-amber-50'}`}>
                 <div className={`mt-0.5 w-2.5 h-2.5 rounded-full shrink-0 ${ind.severity === 'red' ? 'bg-red-500' : 'bg-amber-400'}`} />
                 <div className="flex-1">
@@ -232,25 +233,25 @@ function DataContent({ contract, onMarkReviewed, reviewed, mpanLabel }: ContentP
 
 // ─── Main export ──────────────────────────────────────────────────
 
-export function DataTab({ contract, onMarkReviewed, reviewed }: Props) {
-  const isMulti = (contract.mpans?.length ?? 0) > 1;
+export function DataTab({ quote, onMarkReviewed, reviewed }: Props) {
+  const isMulti = quote.sites.length > 1;
 
-  const [activeMpan, setActiveMpan] = useState(contract.mpans?.[0]?.mpan ?? contract.mpan);
+  const [activeMpan, setActiveMpan] = useState(quote.sites[0]?.mpan ?? quote.mpan ?? '');
   const [reviewedMpans, setReviewedMpans] = useState<Set<string>>(() => {
     if (!isMulti) return new Set<string>();
     // Auto-verify MPANs with no issues on initial load
     return new Set(
-      (contract.mpans ?? [])
+      quote.sites
         .filter(s => getMpanDataStatus(s) === 'Pass')
         .map(s => s.mpan)
     );
   });
 
   if (!isMulti) {
-    return <DataContent contract={contract} onMarkReviewed={onMarkReviewed} reviewed={reviewed} />;
+    return <DataContent quote={quote} onMarkReviewed={onMarkReviewed} reviewed={reviewed} />;
   }
 
-  const sites = contract.mpans!;
+  const sites = quote.sites;
 
   const handleMpanReviewed = (mpan: string) => {
     setReviewedMpans(prev => {
@@ -267,7 +268,7 @@ export function DataTab({ contract, onMarkReviewed, reviewed }: Props) {
   };
 
   const activeSite    = sites.find(s => s.mpan === activeMpan)!;
-  const mpanContract  = buildMpanContract(contract, activeSite);
+  const siteQuote     = buildSiteQuote(quote, activeSite);
   const isActiveReviewed = reviewedMpans.has(activeMpan);
 
   return (
@@ -275,7 +276,7 @@ export function DataTab({ contract, onMarkReviewed, reviewed }: Props) {
       <MpanSummaryBar sites={sites} getStatus={getMpanDataStatus} verifiedSet={reviewedMpans} onReviewAll={handleReviewAll} />
       <MpanSubTabBar  sites={sites} activeMpan={activeMpan} onSelect={setActiveMpan} getStatus={getMpanDataStatus} verifiedSet={reviewedMpans} />
       <DataContent
-        contract={mpanContract}
+        quote={siteQuote}
         onMarkReviewed={() => handleMpanReviewed(activeMpan)}
         reviewed={isActiveReviewed}
         mpanLabel={activeMpan}

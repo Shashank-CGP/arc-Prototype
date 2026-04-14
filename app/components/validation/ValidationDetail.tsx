@@ -1,6 +1,7 @@
 'use client';
 import { useState, Fragment } from 'react';
-import { Contract, Basket, ValidationResult, CreditStatus, AQ_APPROVAL_THRESHOLD } from '../../data/validationData';
+import { Quote } from '../../data/mockData';
+import { Basket, ValidationResult, CreditStatus, AQ_APPROVAL_THRESHOLD } from '../../data/validationData';
 import { BasketContextBar } from '../shared/BasketContextBar';
 import { DataTab, getMpanDataStatus } from './tabs/DataTab';
 import { PricingTab, getMpanPricingStatus } from './tabs/PricingTab';
@@ -10,10 +11,10 @@ import { AQApprovalTab } from './tabs/AQApprovalTab';
 import { AuditTrailTab } from './AuditTrailTab';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   onBack: () => void;
   onProceedToAcceptance: () => void;
-  onUpdateStatus: (status: Contract['status']) => void;
+  onUpdateStatus: (status: Quote['status']) => void;
   basket?: Basket;
   siblingRefs?: { id: string; ref: string; type: 'quote' | 'contract'; status: string }[];
   onNavigateToSibling?: (type: 'quote' | 'contract', id: string) => void;
@@ -38,8 +39,15 @@ function ResultIcon({ status, size = 'sm' }: { status: ValidationResult; size?: 
   return <svg className={`${sz} text-slate-400`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="9" /></svg>;
 }
 
-export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUpdateStatus, basket, siblingRefs, onNavigateToSibling }: Props) {
-  const checks = contract.validationChecks;
+export function ValidationDetail({ quote, onBack, onProceedToAcceptance, onUpdateStatus, basket, siblingRefs, onNavigateToSibling }: Props) {
+  const checks = quote.validationChecks ?? {
+    dataIntegrity:     { status: 'Pending' as const, message: 'Not yet validated', tab: 'data' as const },
+    pricingAccuracy:   { status: 'Pending' as const, message: 'Not yet validated', tab: 'pricing' as const },
+    curveAlignment:    { status: 'Pending' as const, message: 'Not yet validated', tab: 'quote' as const },
+    ampIndicators:     { status: 'Pending' as const, message: 'Not yet validated', tab: 'quote' as const },
+    roiCredit:         { status: 'Pending' as const, message: 'Not yet validated', tab: 'aq-approval' as const },
+    signatureReadiness:{ status: 'Pending' as const, message: 'Not yet validated', tab: 'signature' as const },
+  };
 
   const [activeTab, setActiveTab] = useState<AllTabs>('overview');
 
@@ -55,11 +63,11 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
     aqApproval:  false, // always starts as pending — Trading team must confirm
   });
 
-  const [creditStatus, setCreditStatus] = useState<CreditStatus>(contract.creditApprovalStatus);
+  const [creditStatus, setCreditStatus] = useState<CreditStatus>(quote.creditApprovalStatus ?? 'N/A');
   const [mpansOpen, setMpansOpen] = useState(false);
 
-  // Whether this contract requires Trading team AQ approval
-  const needsAqApproval = contract.aq >= AQ_APPROVAL_THRESHOLD;
+  // Whether this quote requires Trading team AQ approval
+  const needsAqApproval = (quote.aq ?? quote.eac) >= AQ_APPROVAL_THRESHOLD;
 
   // Contract Services checks complete (everything except aqApproval)
   const servicesComplete = tabVerified.data && tabVerified.pricing && tabVerified.quote && tabVerified.signature;
@@ -107,34 +115,34 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
   };
 
   // Multi-MPAN context for checklist labels
-  const mpanCount   = contract.mpans?.length ?? 0;
+  const mpanCount   = quote.sites.length;
   const mpanBadge   = mpanCount > 1 ? ` (${mpanCount} MPANs)` : '';
 
   // Per-MPAN issue derivation for checklist attribution
   type MpanDetail = { mpan: string; siteRef: string; status: ValidationResult; issue?: string };
 
   const deriveMpanDetails = (category: 'data' | 'pricing' | 'quote'): MpanDetail[] => {
-    if (!contract.mpans || contract.mpans.length <= 1) return [];
-    return contract.mpans.map(s => {
+    if (quote.sites.length <= 1) return [];
+    return quote.sites.map(s => {
       if (category === 'data') {
         const st = getMpanDataStatus(s);
-        const failCheck = s.dataChecks.find(c => c.status === 'Fail');
-        const redAmp = s.ampIndicators.find(a => a.severity === 'red');
+        const failCheck = (s.dataChecks ?? []).find(c => c.status === 'Fail');
+        const redAmp = (s.ampIndicators ?? []).find(a => a.severity === 'red');
         const issue = redAmp ? redAmp.detail : failCheck ? `${failCheck.name}: ${failCheck.actual}` : undefined;
-        return { mpan: s.mpan, siteRef: s.siteRef, status: st, issue };
+        return { mpan: s.mpan, siteRef: s.siteRef ?? s.mpan, status: st, issue };
       }
       if (category === 'pricing') {
         const st = getMpanPricingStatus(s);
-        const breach = [...s.pricingRows, ...s.standingRows].find(r =>
+        const breach = [...(s.pricingRows ?? []), ...(s.standingRows ?? [])].find(r =>
           r.anomalyRange && (r.value < r.anomalyRange.min || r.value > r.anomalyRange.max));
-        return { mpan: s.mpan, siteRef: s.siteRef, status: st, issue: breach ? `${breach.name}: ${breach.value} outside ${breach.anomalyRange!.min}–${breach.anomalyRange!.max}` : undefined };
+        return { mpan: s.mpan, siteRef: s.siteRef ?? s.mpan, status: st, issue: breach ? `${breach.name}: ${breach.value} outside ${breach.anomalyRange!.min}–${breach.anomalyRange!.max}` : undefined };
       }
       // quote
       const st = getMpanQuoteStatus(s);
-      const issue = s.curveName !== s.currentCurveName
+      const issue = (s.curveName ?? '') !== (s.currentCurveName ?? '')
         ? `Curve ${s.curveName} superseded (current: ${s.currentCurveName})`
-        : s.ampIndicators.length > 0 ? `${s.ampIndicators.length} AMP indicator(s)` : undefined;
-      return { mpan: s.mpan, siteRef: s.siteRef, status: st, issue };
+        : (s.ampIndicators ?? []).length > 0 ? `${(s.ampIndicators ?? []).length} AMP indicator(s)` : undefined;
+      return { mpan: s.mpan, siteRef: s.siteRef ?? s.mpan, status: st, issue };
     });
   };
 
@@ -194,7 +202,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
       {basket && siblingRefs && siblingRefs.length > 0 && onNavigateToSibling && (
         <BasketContextBar
           basket={basket}
-          currentRef={contract.ref}
+          currentRef={quote.ref}
           siblings={siblingRefs}
           onNavigate={onNavigateToSibling}
         />
@@ -205,20 +213,20 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-xl font-bold font-mono text-slate-900">{contract.ref}</h1>
-              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${contract.contractType === 'New Business' ? 'bg-sky-100 text-sky-800 ring-1 ring-sky-300' : 'bg-indigo-100 text-indigo-800 ring-1 ring-indigo-300'}`}>
-                {contract.contractType}
+              <h1 className="text-xl font-bold font-mono text-slate-900">{quote.ref}</h1>
+              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${quote.quoteType === 'New Business' ? 'bg-sky-100 text-sky-800 ring-1 ring-sky-300' : 'bg-indigo-100 text-indigo-800 ring-1 ring-indigo-300'}`}>
+                {quote.quoteType}
               </span>
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${
-                contract.status === 'Auto-Approved' ? 'bg-green-100 text-green-700 border-green-200' :
-                contract.status === 'Manual Review' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                contract.status === 'Accepted'       ? 'bg-sky-100 text-sky-700 border-sky-200' :
+                quote.status === 'Auto-Approved' ? 'bg-green-100 text-green-700 border-green-200' :
+                quote.status === 'Manual Review' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                quote.status === 'Accepted'       ? 'bg-sky-100 text-sky-700 border-sky-200' :
                 'bg-red-100 text-red-700 border-red-200'}`}>
-                {contract.status}
+                {quote.status}
               </span>
             </div>
-            <p className="text-lg font-semibold text-slate-700">{contract.customer}</p>
-            <p className="text-sm text-slate-500 mt-0.5">{contract.supplier} · {contract.contractStart} – {contract.contractEnd}</p>
+            <p className="text-lg font-semibold text-slate-700">{quote.customer}</p>
+            <p className="text-sm text-slate-500 mt-0.5">{quote.supplier} · {quote.contractStart} – {quote.contractEnd}</p>
           </div>
           <div className="flex items-center gap-2.5">
             <button onClick={() => setActiveTab('audit')}
@@ -246,7 +254,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
           {/* Account Manager */}
           <div>
             <div className="text-xs text-slate-500 font-medium mb-0.5">Account Manager</div>
-            <div className="text-sm font-semibold text-slate-900">{contract.accountManager}</div>
+            <div className="text-sm font-semibold text-slate-900">{quote.accountManager}</div>
           </div>
           {/* MPAN — accordion trigger for multi-MPAN */}
           <div>
@@ -262,26 +270,26 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
                 </svg>
               </button>
             ) : (
-              <div className="text-xs font-semibold font-mono text-slate-900">{contract.mpan}</div>
+              <div className="text-xs font-semibold font-mono text-slate-900">{quote.mpan ?? ''}</div>
             )}
           </div>
           {/* AQ */}
           <div>
             <div className="text-xs text-slate-500 font-medium mb-0.5">AQ</div>
             <div className="text-sm font-semibold text-slate-900">
-              {contract.aq.toLocaleString()} kWh
+              {(quote.aq ?? quote.eac).toLocaleString()} kWh
               {mpanCount > 1 && <span className="ml-1 text-xs text-slate-400 font-normal">total</span>}
             </div>
           </div>
           {/* Unit Rate */}
           <div>
             <div className="text-xs text-slate-500 font-medium mb-0.5">Unit Rate</div>
-            <div className="text-sm font-semibold text-slate-900">{contract.unitRate.toFixed(4)}p/kWh</div>
+            <div className="text-sm font-semibold text-slate-900">{(quote.unitRate ?? 0).toFixed(4)}p/kWh</div>
           </div>
           {/* Standing Charge */}
           <div>
             <div className="text-xs text-slate-500 font-medium mb-0.5">Standing Charge</div>
-            <div className="text-sm font-semibold text-slate-900">£{contract.standingCharge.toFixed(2)}/day</div>
+            <div className="text-sm font-semibold text-slate-900">£{(quote.standingCharge ?? 0).toFixed(2)}/day</div>
           </div>
         </div>
 
@@ -301,7 +309,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
                 </tr>
               </thead>
               <tbody>
-                {contract.mpans!.map((site, idx) => {
+                {quote.sites.map((site, idx) => {
                   const dSt   = getMpanDataStatus(site);
                   const pSt   = getMpanPricingStatus(site);
                   const qSt   = getMpanQuoteStatus(site);
@@ -317,21 +325,21 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
 
                   // Collect issues
                   const issues: { cat: string; msg: string; sev: 'Fail' | 'Warning' }[] = [];
-                  site.dataChecks.filter(c => c.status !== 'Pass').forEach(c =>
+                  (site.dataChecks ?? []).filter(c => c.status !== 'Pass').forEach(c =>
                     issues.push({ cat: 'Data', msg: `${c.name}: expected "${c.expected}", got "${c.actual}"`, sev: c.status as 'Fail' | 'Warning' }));
-                  site.ampIndicators.forEach(a =>
+                  (site.ampIndicators ?? []).forEach(a =>
                     issues.push({ cat: 'Data', msg: a.detail, sev: a.severity === 'red' ? 'Fail' : 'Warning' }));
-                  [...site.pricingRows, ...site.standingRows].filter(r => r.anomalyRange && (r.value < r.anomalyRange.min || r.value > r.anomalyRange.max)).forEach(r =>
+                  [...(site.pricingRows ?? []), ...(site.standingRows ?? [])].filter(r => r.anomalyRange && (r.value < r.anomalyRange.min || r.value > r.anomalyRange.max)).forEach(r =>
                     issues.push({ cat: 'Pricing', msg: `${r.name}: ${r.value} outside range ${r.anomalyRange!.min}–${r.anomalyRange!.max}`, sev: 'Warning' }));
-                  if (site.curveName !== site.currentCurveName)
+                  if ((site.curveName ?? '') !== (site.currentCurveName ?? ''))
                     issues.push({ cat: 'Quote', msg: `Curve locked to superseded ${site.curveName} (current: ${site.currentCurveName})`, sev: 'Fail' });
 
                   return (
                     <Fragment key={site.mpan}>
                       <tr className={`${rowBg} border-b border-slate-100`}>
                         <td className="px-4 py-2.5 font-mono font-semibold text-slate-800 whitespace-nowrap">{site.mpan}</td>
-                        <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{site.siteRef}</td>
-                        <td className="px-4 py-2.5 text-slate-700 font-medium text-right tabular-nums whitespace-nowrap">{site.aq.toLocaleString()}</td>
+                        <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{site.siteRef ?? site.address}</td>
+                        <td className="px-4 py-2.5 text-slate-700 font-medium text-right tabular-nums whitespace-nowrap">{(site.aq ?? site.eac).toLocaleString()}</td>
                         <StatusCell st={dSt} />
                         <StatusCell st={pSt} />
                         <StatusCell st={qSt} />
@@ -371,7 +379,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
       </div>
 
       {/* Status banner */}
-      {contract.status === 'Auto-Approved' ? (
+      {quote.status === 'Auto-Approved' ? (
         <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-lg bg-green-50 border border-green-200">
           <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -381,7 +389,7 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
             <div className="text-green-700 text-xs mt-0.5">Confirm AQ Approval on the Trading team tab to proceed to the data sheet.</div>
           </div>
         </div>
-      ) : contract.status === 'Manual Review' ? (
+      ) : quote.status === 'Manual Review' ? (
         <div className="flex items-center gap-3 px-5 py-4 mb-4 rounded-lg bg-amber-50 border border-amber-200">
           <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
@@ -471,38 +479,38 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
                 {/* ROI */}
                 <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-slate-50">
                   <div className="flex items-center gap-2.5">
-                    {contract.roi >= 5
+                    {(quote.roi ?? 0) >= 5
                       ? <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       : <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                     }
                     <div>
                       <div className="text-sm font-semibold text-slate-800">ROI</div>
-                      <div className="text-xs text-slate-500">{contract.roi}% — threshold 5%</div>
+                      <div className="text-xs text-slate-500">{quote.roi ?? 0}% — threshold 5%</div>
                     </div>
                   </div>
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                    contract.roi >= 5 ? 'bg-green-100 text-green-800 ring-1 ring-green-300' : 'bg-amber-100 text-amber-800 ring-1 ring-amber-300'
+                    (quote.roi ?? 0) >= 5 ? 'bg-green-100 text-green-800 ring-1 ring-green-300' : 'bg-amber-100 text-amber-800 ring-1 ring-amber-300'
                   }`}>
-                    {contract.roi >= 5 ? 'Passed' : 'Awaiting Commercial team'}
+                    {(quote.roi ?? 0) >= 5 ? 'Passed' : 'Awaiting Commercial team'}
                   </span>
                 </div>
 
                 {/* Credit */}
                 <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-slate-50">
                   <div className="flex items-center gap-2.5">
-                    {(contract.roi >= 5 || creditStatus === 'Approved')
+                    {((quote.roi ?? 0) >= 5 || creditStatus === 'Approved')
                       ? <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       : <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                     }
                     <div>
                       <div className="text-sm font-semibold text-slate-800">Credit</div>
                       <div className="text-xs text-slate-500">
-                        {contract.roi >= 5 ? 'No approval required' : 'Approver: Phil Marsden (Credit Director)'}
+                        {(quote.roi ?? 0) >= 5 ? 'No approval required' : 'Approver: Phil Marsden (Credit Director)'}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {contract.roi >= 5 ? (
+                    {(quote.roi ?? 0) >= 5 ? (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 ring-1 ring-green-300">Passed</span>
                     ) : creditStatus === 'Approved' ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 ring-1 ring-green-300">
@@ -533,14 +541,14 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Contract Summary</h2>
               <dl className="space-y-2.5 text-sm">
                 {[
-                  { label: 'Contract Ref', value: contract.ref, mono: true },
-                  { label: 'Customer', value: contract.customer },
-                  { label: 'Supplier', value: contract.supplier },
-                  { label: 'Supply Period', value: `${contract.contractStart} – ${contract.contractEnd}` },
-                  { label: 'AQ', value: `${contract.aq.toLocaleString()} kWh${mpanCount > 1 ? ` across ${mpanCount} MPANs` : ''}` },
-                  { label: 'Unit Rate', value: `${contract.unitRate.toFixed(4)}p/kWh` },
-                  { label: 'Standing Charge', value: `£${contract.standingCharge.toFixed(2)}/day` },
-                  { label: 'ROI', value: `${contract.roi}%`, warn: contract.roi < 5 },
+                  { label: 'Contract Ref', value: quote.ref, mono: true },
+                  { label: 'Customer', value: quote.customer },
+                  { label: 'Supplier', value: quote.supplier },
+                  { label: 'Supply Period', value: `${quote.contractStart} – ${quote.contractEnd}` },
+                  { label: 'AQ', value: `${(quote.aq ?? quote.eac).toLocaleString()} kWh${mpanCount > 1 ? ` across ${mpanCount} MPANs` : ''}` },
+                  { label: 'Unit Rate', value: `${(quote.unitRate ?? 0).toFixed(4)}p/kWh` },
+                  { label: 'Standing Charge', value: `£${(quote.standingCharge ?? 0).toFixed(2)}/day` },
+                  { label: 'ROI', value: `${quote.roi ?? 0}%`, warn: (quote.roi ?? 0) < 5 },
                 ].map(item => (
                   <div key={item.label} className="flex justify-between items-center">
                     <dt className="text-slate-500">{item.label}</dt>
@@ -589,12 +597,12 @@ export function ValidationDetail({ contract, onBack, onProceedToAcceptance, onUp
         </div>
       )}
 
-      {activeTab === 'data'        && <DataTab contract={contract} onMarkReviewed={() => markVerified('data')} reviewed={tabVerified.data} />}
-      {activeTab === 'pricing'     && <PricingTab contract={contract} onMarkVerified={() => markVerified('pricing')} verified={tabVerified.pricing} />}
-      {activeTab === 'quote'       && <QuoteTab contract={contract} onMarkVerified={() => markVerified('quote')} verified={tabVerified.quote} />}
-      {activeTab === 'signature'   && <SignatureTab contract={contract} onVerified={() => markVerified('signature')} isVerified={tabVerified.signature} />}
-      {activeTab === 'aq-approval' && <AQApprovalTab contract={contract} confirmed={tabVerified.aqApproval} onConfirm={() => markVerified('aqApproval')} />}
-      {activeTab === 'audit'       && <AuditTrailTab events={contract.auditTrail} contractRef={contract.ref} />}
+      {activeTab === 'data'        && <DataTab quote={quote} onMarkReviewed={() => markVerified('data')} reviewed={tabVerified.data} />}
+      {activeTab === 'pricing'     && <PricingTab quote={quote} onMarkVerified={() => markVerified('pricing')} verified={tabVerified.pricing} />}
+      {activeTab === 'quote'       && <QuoteTab quote={quote} onMarkVerified={() => markVerified('quote')} verified={tabVerified.quote} />}
+      {activeTab === 'signature'   && <SignatureTab quote={quote} onVerified={() => markVerified('signature')} isVerified={tabVerified.signature} />}
+      {activeTab === 'aq-approval' && <AQApprovalTab quote={quote} confirmed={tabVerified.aqApproval} onConfirm={() => markVerified('aqApproval')} />}
+      {activeTab === 'audit'       && <AuditTrailTab events={quote.auditTrail} quoteRef={quote.ref} />}
     </div>
   );
 }

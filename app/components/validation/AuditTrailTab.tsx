@@ -1,10 +1,19 @@
 'use client';
 import { useState } from 'react';
-import { AuditEvent } from '../../data/validationData';
+// Accept audit events from either data source
+interface AuditEventItem {
+  id: string;
+  timestamp: string;
+  action: string;
+  user: string;
+  detail?: string;
+  notes?: string;
+  category?: 'auto' | 'manual' | 'system';
+}
 
 interface Props {
-  events: AuditEvent[];
-  contractRef: string;
+  events: AuditEventItem[];
+  quoteRef: string;
 }
 
 const categoryStyle: Record<string, { icon: string; color: string; bg: string; border: string }> = {
@@ -21,7 +30,7 @@ function fmt(ts: string) {
   };
 }
 
-export function AuditTrailTab({ events, contractRef }: Props) {
+export function AuditTrailTab({ events, quoteRef }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggle = (id: string) => setExpanded(prev => {
@@ -35,7 +44,7 @@ export function AuditTrailTab({ events, contractRef }: Props) {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Audit Trail</h2>
-          <p className="text-sm text-slate-500">{contractRef} — {events.length} events recorded</p>
+          <p className="text-sm text-slate-500">{quoteRef} — {events.length} events recorded</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-600">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -49,7 +58,7 @@ export function AuditTrailTab({ events, contractRef }: Props) {
         <div className="absolute left-6 top-0 bottom-0 w-px bg-slate-200" />
         <div className="space-y-3">
           {events.map(event => {
-            const style = categoryStyle[event.category];
+            const style = categoryStyle[event.category ?? 'system'];
             const { date, time } = fmt(event.timestamp);
             const isOpen = expanded.has(event.id);
             return (
@@ -63,10 +72,10 @@ export function AuditTrailTab({ events, contractRef }: Props) {
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`text-sm font-bold ${style.color}`}>{event.action}</span>
                         <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${style.bg} ${style.color}`}>
-                          {event.category === 'auto' ? 'Automated' : event.category === 'system' ? 'System' : 'Manual'}
+                          {(event.category ?? 'system') === 'auto' ? 'Automated' : (event.category ?? 'system') === 'system' ? 'System' : 'Manual'}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-600 mb-1">{event.detail}</p>
+                      <p className="text-sm text-slate-600 mb-1">{event.detail ?? event.notes ?? ''}</p>
                       <div className="flex items-center gap-3 text-xs text-slate-400">
                         <span className="flex items-center gap-1">
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -86,12 +95,12 @@ export function AuditTrailTab({ events, contractRef }: Props) {
                     <div className="px-4 pb-4 pt-0 bg-slate-50 border-t border-slate-100">
                       <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-2">Full event detail</div>
                       <div className="font-mono text-xs text-slate-700 bg-white rounded-lg border border-slate-200 p-3 leading-relaxed">
-                        <div>contract_ref: {contractRef}</div>
+                        <div>contract_ref: {quoteRef}</div>
                         <div>timestamp: {event.timestamp}</div>
                         <div>action: {event.action}</div>
                         <div>user: {event.user}</div>
-                        <div>category: {event.category}</div>
-                        <div>detail: {event.detail}</div>
+                        <div>category: {event.category ?? 'system'}</div>
+                        <div>detail: {event.detail ?? event.notes ?? ''}</div>
                       </div>
                     </div>
                   )}

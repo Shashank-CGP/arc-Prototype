@@ -1,16 +1,17 @@
 'use client';
-import { Contract, CreditStatus } from '../../../data/validationData';
+import { Quote } from '../../../data/mockData';
+import { CreditStatus } from '../../../data/validationData';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   creditStatus: CreditStatus;
   onSimulateApproval: () => void;
 }
 
 const CREDIT_THRESHOLD = 5;
 
-export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Props) {
-  const roiOk = contract.roi >= CREDIT_THRESHOLD;
+export function ROICreditTab({ quote, creditStatus, onSimulateApproval }: Props) {
+  const roiOk = (quote.roi ?? 0) >= CREDIT_THRESHOLD;
   const creditRequired = !roiOk;
 
   return (
@@ -20,7 +21,7 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">ROI Summary</h3>
         <div className="grid grid-cols-3 gap-5">
           {[
-            { label: 'Calculated ROI', value: `${contract.roi}%`, highlight: !roiOk ? 'red' : 'green' },
+            { label: 'Calculated ROI', value: `${quote.roi ?? 0}%`, highlight: !roiOk ? 'red' : 'green' },
             { label: 'Credit Threshold', value: `${CREDIT_THRESHOLD}%`, highlight: 'neutral' },
             { label: 'Status', value: roiOk ? 'No action required' : 'Credit approval required', highlight: roiOk ? 'green' : 'red' },
           ].map(item => (
@@ -51,15 +52,15 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
             {/* ROI fill */}
             <div
               className={`h-full rounded-full transition-all ${roiOk ? 'bg-green-500' : 'bg-red-500'}`}
-              style={{ width: `${Math.min(100, (contract.roi / 15) * 100)}%` }}
+              style={{ width: `${Math.min(100, ((quote.roi ?? 0) / 15) * 100)}%` }}
             />
           </div>
           <div className="flex justify-between items-center mt-1.5">
             <div
               className={`text-sm font-bold ${roiOk ? 'text-green-700' : 'text-red-700'}`}
-              style={{ marginLeft: `${Math.min(94, (contract.roi / 15) * 100)}%` }}
+              style={{ marginLeft: `${Math.min(94, ((quote.roi ?? 0) / 15) * 100)}%` }}
             >
-              {contract.roi}%
+              {quote.roi ?? 0}%
             </div>
           </div>
         </div>
@@ -77,7 +78,7 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
             <div>
               <div className="text-red-900 font-bold text-sm">Credit approval required before this contract can progress</div>
               <div className="text-red-700 text-xs mt-0.5">
-                ROI of {contract.roi}% is below the minimum credit threshold of {CREDIT_THRESHOLD}%. This contract is blocked from proceeding to acceptance until credit approval is confirmed.
+                ROI of {quote.roi ?? 0}% is below the minimum credit threshold of {CREDIT_THRESHOLD}%. This contract is blocked from proceeding to acceptance until credit approval is confirmed.
               </div>
             </div>
           </div>
@@ -139,7 +140,7 @@ export function ROICreditTab({ contract, creditStatus, onSimulateApproval }: Pro
           <svg className="w-5 h-5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
           <div>
             <div className="text-green-900 font-semibold text-sm">ROI above credit threshold — no approval required</div>
-            <div className="text-green-700 text-xs mt-0.5">ROI of {contract.roi}% exceeds the minimum threshold of {CREDIT_THRESHOLD}%. Contract can proceed to acceptance without external credit approval.</div>
+            <div className="text-green-700 text-xs mt-0.5">ROI of {quote.roi ?? 0}% exceeds the minimum threshold of {CREDIT_THRESHOLD}%. Contract can proceed to acceptance without external credit approval.</div>
           </div>
         </div>
       )}

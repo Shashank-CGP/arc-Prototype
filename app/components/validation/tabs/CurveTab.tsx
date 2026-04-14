@@ -4,10 +4,10 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import { Contract } from '../../../data/validationData';
+import { Quote } from '../../../data/mockData';
 
 interface Props {
-  contract: Contract;
+  quote: Quote;
   onMarkVerified: () => void;
   verified: boolean;
   onReferToTrading: () => void;
@@ -34,16 +34,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading }: Props) {
+export function CurveTab({ quote, onMarkVerified, verified, onReferToTrading }: Props) {
   const [referralLogged, setReferralLogged] = useState(false);
-  const isMismatch = contract.curveName !== contract.currentCurveName;
+  const isMismatch = quote.curveName !== quote.currentCurveName;
 
-  const maxDivergence = contract.curveData.reduce((max, pt) => {
+  const maxDivergence = (quote.curveData ?? []).reduce((max, pt) => {
     const diff = Math.abs(pt.current - pt.original);
     return diff > max ? diff : max;
   }, 0);
 
-  const peakPoints = contract.curveData.filter((_, i) => i >= 7 && i < 19);
+  const peakPoints = (quote.curveData ?? []).filter((_, i) => i >= 7 && i < 19);
   const avgPeakDiff = peakPoints.length
     ? peakPoints.reduce((s, p) => s + (p.current - p.original), 0) / peakPoints.length
     : 0;
@@ -54,10 +54,11 @@ export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading 
   };
 
   // Comparison table rows
+  const cd = quote.curveData ?? [];
   const rows = [
-    { label: 'Peak (07:00–19:00)',    origAvg: avg(contract.curveData.filter((_, i) => i >= 7 && i < 19), 'original'), currAvg: avg(contract.curveData.filter((_, i) => i >= 7 && i < 19), 'current') },
-    { label: 'Off-Peak (19:00–22:00)', origAvg: avg(contract.curveData.filter((_, i) => i >= 19 && i < 22), 'original'), currAvg: avg(contract.curveData.filter((_, i) => i >= 19 && i < 22), 'current') },
-    { label: 'Night (22:00–07:00)',    origAvg: avg([...contract.curveData.filter((_, i) => i >= 22), ...contract.curveData.filter((_, i) => i < 7)], 'original'), currAvg: avg([...contract.curveData.filter((_, i) => i >= 22), ...contract.curveData.filter((_, i) => i < 7)], 'current') },
+    { label: 'Peak (07:00–19:00)',    origAvg: avg(cd.filter((_, i) => i >= 7 && i < 19), 'original'), currAvg: avg(cd.filter((_, i) => i >= 7 && i < 19), 'current') },
+    { label: 'Off-Peak (19:00–22:00)', origAvg: avg(cd.filter((_, i) => i >= 19 && i < 22), 'original'), currAvg: avg(cd.filter((_, i) => i >= 19 && i < 22), 'current') },
+    { label: 'Night (22:00–07:00)',    origAvg: avg([...cd.filter((_, i) => i >= 22), ...cd.filter((_, i) => i < 7)], 'original'), currAvg: avg([...cd.filter((_, i) => i >= 22), ...cd.filter((_, i) => i < 7)], 'current') },
   ];
 
   return (
@@ -73,8 +74,8 @@ export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading 
           <div className="flex-1">
             <div className="text-amber-900 font-semibold text-sm">Contract locked to different curve — validation required</div>
             <div className="text-amber-700 text-xs mt-0.5">
-              Contract curve <span className="font-mono font-semibold">{contract.curveName}</span> has been superseded by{' '}
-              <span className="font-mono font-semibold">{contract.currentCurveName}</span>. Peak divergence {avgPeakDiff > 0 ? '+' : ''}{avgPeakDiff.toFixed(2)}p/kWh.
+              Contract curve <span className="font-mono font-semibold">{quote.curveName}</span> has been superseded by{' '}
+              <span className="font-mono font-semibold">{quote.currentCurveName}</span>. Peak divergence {avgPeakDiff > 0 ? '+' : ''}{avgPeakDiff.toFixed(2)}p/kWh.
             </div>
           </div>
           {!referralLogged ? (
@@ -91,7 +92,7 @@ export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading 
           <svg className="w-5 h-5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
           <div>
             <div className="text-green-900 font-semibold text-sm">Contract aligned to approved curve</div>
-            <div className="text-green-700 text-xs mt-0.5">Locked to <span className="font-mono font-semibold">{contract.curveName}</span> — current approved curve. No divergence detected.</div>
+            <div className="text-green-700 text-xs mt-0.5">Locked to <span className="font-mono font-semibold">{quote.curveName}</span> — current approved curve. No divergence detected.</div>
           </div>
         </div>
       )}
@@ -105,8 +106,8 @@ export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading 
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Period</th>
-              <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Contract Curve ({contract.curveName})</th>
-              <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Current Approved ({contract.currentCurveName})</th>
+              <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Contract Curve ({quote.curveName})</th>
+              <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Current Approved ({quote.currentCurveName})</th>
               <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Difference</th>
             </tr>
           </thead>
@@ -141,7 +142,7 @@ export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading 
           )}
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={contract.curveData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+          <LineChart data={cd} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="period" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={{ stroke: '#cbd5e1' }}
               interval={3} />
@@ -153,9 +154,9 @@ export function CurveTab({ contract, onMarkVerified, verified, onReferToTrading 
               <ReferenceLine x="07:00" stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: 'Peak start', fontSize: 10, fill: '#92400e' }} />
             )}
             <Line type="monotone" dataKey="original" stroke="#3b82f6" strokeWidth={2}
-              dot={false} name={`Contract (${contract.curveName})`} />
+              dot={false} name={`Contract (${quote.curveName})`} />
             <Line type="monotone" dataKey="current" stroke="#f59e0b" strokeWidth={2}
-              strokeDasharray={isMismatch ? '6 3' : undefined} dot={false} name={`Current Approved (${contract.currentCurveName})`} />
+              strokeDasharray={isMismatch ? '6 3' : undefined} dot={false} name={`Current Approved (${quote.currentCurveName})`} />
           </LineChart>
         </ResponsiveContainer>
       </div>
